@@ -16,3 +16,26 @@ end
 
 % Check if T_F32 data are as expected (127, 128 should be [], and 129 should have data).
 d.T_F32{127:129}
+
+
+fprintf('Checking AddVal()\n');
+fprintf('d.AddVal{1} must have values: 0 to 3*4-1=11 .... \n');
+d.AddVal{1}
+
+fprintf('Checking AddVal() + DeleteLastRow() + AddVal()\n');
+fprintf('d.AddVal{2} must have values: 0 to 7 .... \n');
+d.AddVal{2}
+
+fprintf('Checking AddVal() + DeleteRow(3)\n');
+fprintf('d.DeleteRow{1:9} must have values: 0,1,2,4,5,6,7,8 .... \n');
+d.DeleteRow{1:9}
+
+fprintf('Checking DeleteLastElement(n)\n');
+fprintf('d.DeleteLastElement{2} must have values: 0,1 .... \n');
+d.DeleteLastElement{2}
+
+fprintf('Checking AppendRow\n');
+fprintf('d.AppendRow{2} must have values: 0,1,2,3,4,21,22,23 .... \n');
+d.AppendRow{2}
+
+

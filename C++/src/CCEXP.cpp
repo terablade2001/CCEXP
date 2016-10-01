@@ -224,6 +224,105 @@ int Cols(CCEXP &obj, size_t sel, size_t row, size_t &cols) {
 }
 
 
+int DeleteLastRow(CCEXP &obj, const char* matname) {
+	if (!obj.isActive) return 0;
+	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "DeleteLastRow():: CCEXP Table with name [%s] has wrong status." , matname );
+	obj.Status = CCEXPORTMAT_ACTIVE;
+	size_t i, sel;
+	const size_t N = obj.M.size();
+	bool ArrayFound = false;
+	for (i=0; i < N; i++) { 
+		if ((obj.M[i])->CompareName(matname) == 0) { sel=i; ArrayFound = true; break; }
+	}
+	if (ArrayFound) {
+		int ret = (obj.M[sel])->DeleteLastRow();
+		obj.Status = CCEXPORTMAT_READY;
+		if (ret != 0) CCEXP_ERR(obj, ret, "DeleteLastRow():: Table with name = %s return error during call to DeleteLastRow()...", matname);
+		return 0;
+	}
+	obj.Status = CCEXPORTMAT_READY;
+	CCEXP_ERR(obj, ERROR::TableNotFound, "DeleteLastRow():: Table with name = %s was not found!...", matname);
+}
+int DeleteLastRow(CCEXP &obj, size_t sel) {
+	if (!obj.isActive) return 0;
+	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "DeleteLastRow():: CCEXP Table with ID [%lu] has wrong status." , (uint64_t)sel );
+	if (sel < obj.M.size()) {
+		int ret = (obj.M[sel])->DeleteLastRow();
+		obj.Status = CCEXPORTMAT_READY;
+		if (ret != 0) CCEXP_ERR(obj, ret, "DeleteLastRow():: Table with ID = %lu return error during call to DeleteLastRow()...", (uint64_t)sel);
+		return 0;
+	}
+	obj.Status = CCEXPORTMAT_READY;
+	CCEXP_ERR(obj, ERROR::TableNotFound, "DeleteLastRow():: Table with ID = %lu was not found!...", (uint64_t)sel);
+}
+
+int DeleteRow(CCEXP &obj, const char* matname, size_t row) {
+	if (!obj.isActive) return 0;
+	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "DeleteRow():: CCEXP Table with name [%s] has wrong status." , matname );
+	obj.Status = CCEXPORTMAT_ACTIVE;
+	size_t i, sel;
+	const size_t N = obj.M.size();
+	bool ArrayFound = false;
+	for (i=0; i < N; i++) { 
+		if ((obj.M[i])->CompareName(matname) == 0) { sel=i; ArrayFound = true; break; }
+	}
+	if (ArrayFound) {
+		int ret = (obj.M[sel])->DeleteRow(row);
+		obj.Status = CCEXPORTMAT_READY;
+		if (ret != 0) CCEXP_ERR(obj, ret, "DeleteRow():: Table with name = %s return error during call to DeleteRow()...", matname);
+		return 0;
+	}
+	obj.Status = CCEXPORTMAT_READY;
+	CCEXP_ERR(obj, ERROR::TableNotFound, "DeleteRow():: Table with name = %s was not found!...", matname);
+}
+int DeleteRow(CCEXP &obj, size_t sel, size_t row) {
+	if (!obj.isActive) return 0;
+	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "DeleteRow():: CCEXP Table with ID [%lu] has wrong status." , (uint64_t)sel );
+	if (sel < obj.M.size()) {
+		int ret = (obj.M[sel])->DeleteRow(row);
+		obj.Status = CCEXPORTMAT_READY;
+		if (ret != 0) CCEXP_ERR(obj, ret, "DeleteRow():: Table with ID = %lu return error during call to DeleteRow()...", (uint64_t)sel);
+		return 0;
+	}
+	obj.Status = CCEXPORTMAT_READY;
+	CCEXP_ERR(obj, ERROR::TableNotFound, "DeleteRow():: Table with ID = %lu was not found!...", (uint64_t)sel);
+}
+
+
+int DeleteLastElement(CCEXP &obj, const char* matname, size_t row) {
+	if (!obj.isActive) return 0;
+	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "DeleteLastElement():: CCEXP Table with name [%s] has wrong status." , matname );
+	obj.Status = CCEXPORTMAT_ACTIVE;
+	size_t i, sel;
+	const size_t N = obj.M.size();
+	bool ArrayFound = false;
+	for (i=0; i < N; i++) { 
+		if ((obj.M[i])->CompareName(matname) == 0) { sel=i; ArrayFound = true; break; }
+	}
+	if (ArrayFound) {
+		int ret = (obj.M[sel])->DeleteLastElement(row);
+		obj.Status = CCEXPORTMAT_READY;
+		if (ret != 0) CCEXP_ERR(obj, ret, "DeleteLastElement():: Table with name = %s return error during call to DeleteLastElement()...", matname);
+		return 0;
+	}
+	obj.Status = CCEXPORTMAT_READY;
+	CCEXP_ERR(obj, ERROR::TableNotFound, "DeleteLastElement():: Table with name = %s was not found!...", matname);
+}
+int DeleteLastElement(CCEXP &obj, size_t sel, size_t row) {
+	if (!obj.isActive) return 0;
+	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "DeleteLastElement():: CCEXP Table with ID [%lu] has wrong status." , (uint64_t)sel );
+	if (sel < obj.M.size()) {
+		int ret = (obj.M[sel])->DeleteLastElement(row);
+		obj.Status = CCEXPORTMAT_READY;
+		if (ret != 0) CCEXP_ERR(obj, ret, "DeleteLastElement():: Table with ID = %lu return error during call to DeleteLastElement()...", (uint64_t)sel);
+		return 0;
+	}
+	obj.Status = CCEXPORTMAT_READY;
+	CCEXP_ERR(obj, ERROR::TableNotFound, "DeleteLastElement():: Table with ID = %lu was not found!...", (uint64_t)sel);
+}
+
+
+
 int Reset(CCEXP &obj) {
 	obj.Status = CCEXPORTMAT_INIT;
 	obj.M.clear();

@@ -33,7 +33,7 @@
 #include <limits>
 #include <iostream>
 
-#define CCEXP_VERSION (0.005)
+#define CCEXP_VERSION (0.010)
 #define TRACK_ANALYTIC_ERRORS
 
 #ifndef __FNAME__
@@ -76,6 +76,7 @@ enum ERROR {
     MaximumRowsReached, /// When Adding a new row, and maximum rows have been reached!
 	ReqRowLargerThanInTable, /// When a requested row index is larger than the maximum rows in Table.
 	TableNotFound, /// When a table is not found...
+	TableHasNoRows, /// When a table has no rows, but it's requested to do something on a row.
 	
     Other /// Any other error...
 };
@@ -90,6 +91,9 @@ class CCEXPBase {
 	virtual int NewLine(int empty) = 0;
 	virtual int Rows(size_t &rows) = 0;
 	virtual int Cols(size_t row, size_t &cols) = 0;
+	virtual int DeleteLastRow(void) = 0;
+	virtual int DeleteRow(size_t row) = 0;
+	virtual int DeleteLastElement(size_t row) = 0;
 	virtual int StoreData(FILE *fp) = 0;
 	virtual int Reset(void) = 0;
 };
@@ -126,6 +130,7 @@ class CCEXPMat : public CCEXPBase {
 		int Initialize(const char* Name, const char* typeName, size_t MaxRows, CCEXP* par);
 		int AddValue(T val);
 		int AddRow(T* ptr, size_t n);
+		int AppendRow(size_t row, T* ptr, size_t n);
 
 		int CompareName(const char* Name);
 		bool getIgnoreStatus(void);
@@ -133,6 +138,9 @@ class CCEXPMat : public CCEXPBase {
 		int NewLine(int empty);
 		int Rows(size_t &rows);
 		int Cols(size_t row, size_t &cols);
+		int DeleteLastRow(void);
+		int DeleteRow(size_t row);
+		int DeleteLastElement(size_t row);
 		int StoreData(FILE* fp);
 		int Reset(void);
 
@@ -171,14 +179,6 @@ template<class T> int CCEXPMat<T>::Initialize(const char* Name, const char* type
 	return 0;
 }
 
-template<class T> int CCEXPMat<T>::CompareName(const char* Name) {
-	return strcmp(name,Name);
-}
-
-template<class T> bool CCEXPMat<T>::getIgnoreStatus(void) { return IgnoreM; }
-
-template<class T> int CCEXPMat<T>::setIgnoreStatus(bool status) { IgnoreM = status; return 0; }
-
 template<class T> int CCEXPMat<T>::AddValue(T val) {
 	if (IgnoreM) return 0; // This is not an error - We just ignore the Table...
 	const size_t N = data.size();
@@ -202,6 +202,40 @@ template<class T> int CCEXPMat<T>::AddRow(T* ptr, size_t n) {
 	return 0;
 }
 
+template<class T> int CCEXPMat<T>::AppendRow(size_t row, T* ptr, size_t n) {
+	if (IgnoreM) return 0;
+	const size_t N = data.size();
+	if (row >= N) CCEXP_ERR(*__parent, ERROR::ReqRowLargerThanInTable , "CCEXPMat::AppendRow():: Requested Row is not exist yet! (row >= _maxRows)", 0);
+	auto it = std::next(data.begin(), row);
+	const size_t currentData = (*it).size();
+	(*it).resize(currentData + n);
+	T* Dptr = (*it).data();
+	memcpy(&Dptr[currentData], ptr, sizeof(T) * n);
+	return 0;
+}
+
+template<class T> int CCEXPMat<T>::CompareName(const char* Name) {
+	return strcmp(name,Name);
+}
+
+template<class T> bool CCEXPMat<T>::getIgnoreStatus(void) { return IgnoreM; }
+
+template<class T> int CCEXPMat<T>::setIgnoreStatus(bool status) { IgnoreM = status; return 0; }
+
+
+
+template<class T> int CCEXPMat<T>::NewLine(int empty) {
+	if (IgnoreM) return 0;
+	const size_t N = data.size();
+	if (N >= _maxRows) CCEXP_ERR(*__parent, ERROR::MaximumRowsReached , "CCEXPMat::NewLine():: Maximum Rows Reached!", 0);
+	newLineFlag=true;
+	if (empty == 1) {
+		vector<T> dl; dl.clear(); data.push_back(dl);
+	}
+	return 0;
+}
+
+
 template<class T> int CCEXPMat<T>::Rows(size_t &rows) {
 	if (IgnoreM) return 0;
 	rows = data.size();
@@ -217,17 +251,31 @@ template<class T> int CCEXPMat<T>::Cols(size_t row, size_t &cols) {
 	return 0;
 }
 
-template<class T> int CCEXPMat<T>::NewLine(int empty) {
+template<class T> int CCEXPMat<T>::DeleteLastRow(void) {
 	if (IgnoreM) return 0;
 	const size_t N = data.size();
-	if (N >= _maxRows) CCEXP_ERR(*__parent, ERROR::MaximumRowsReached , "CCEXPMat::NewLine():: Maximum Rows Reached!", 0);
-	newLineFlag=true;
-	if (empty == 1) {
-		vector<T> dl; dl.clear(); data.push_back(dl);
-	}
+	if (N == 0) CCEXP_ERR(*__parent, ERROR::TableHasNoRows , "CCEXPMat::DeleteLastRow():: Table has 0 rows!", 0);
+	data.pop_back();
 	return 0;
 }
 
+template<class T> int CCEXPMat<T>::DeleteRow(size_t row) {
+	if (IgnoreM) return 0;
+	const size_t N = data.size();
+	if (row >= N) CCEXP_ERR(*__parent, ERROR::ReqRowLargerThanInTable , "CCEXPMat::DeleteRow():: Requested Row is not exist yet! (row >= _maxRows)", 0);
+	auto it = std::next(data.begin(), row);
+	data.erase(it);
+	return 0;
+}
+
+template<class T> int CCEXPMat<T>::DeleteLastElement(size_t row) {
+	if (IgnoreM) return 0;
+	const size_t N = data.size();
+	if (row >= N) CCEXP_ERR(*__parent, ERROR::ReqRowLargerThanInTable , "CCEXPMat::DeleteLastElement():: Requested Row is not exist yet! (row >= _maxRows)", 0);
+	auto it = std::next(data.begin(), row);
+	if ((*it).size() > 0)  (*it).pop_back();
+	return 0;
+}
 
 template<class T> int CCEXPMat<T>::StoreData(FILE* fp) {
 	if (IgnoreM) return 0;
@@ -274,6 +322,12 @@ int Rows(CCEXP &obj, const char* matname, size_t &rows);
 int Rows(CCEXP &obj, size_t sel, size_t &rows);
 int Cols(CCEXP &obj, const char* matname, size_t row, size_t &cols);
 int Cols(CCEXP &obj,  size_t sel, size_t row, size_t &cols);
+int DeleteLastRow(CCEXP &obj, const char* matname);
+int DeleteLastRow(CCEXP &obj, size_t sel);
+int DeleteRow(CCEXP &obj, const char* matname, size_t row);
+int DeleteRow(CCEXP &obj, size_t sel, size_t row);
+int DeleteLastElement(CCEXP &obj, const char* matname, size_t row);
+int DeleteLastElement(CCEXP &obj, size_t sel, size_t row);
 int Reset(CCEXP &obj);
 int GetErrors(CCEXP &obj, vector<string>* &ptrError, size_t &NumberOfErrors);
 
@@ -360,6 +414,103 @@ template<class T> inline int AddRow(
 	obj.Status = CCEXPORTMAT_READY;
 	CCEXP_ERR(obj, ERROR::TableNotFound, "AddRow():: Failed to find table with ID [%lu]!", (uint64_t)sel);
 }
+
+
+template<class T> inline int AddVal(
+	CCEXP &obj,
+	const char* matname,
+	T val
+) {
+	if (!obj.isActive) return 0;
+	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "AddVal():: CCEXP object with filename [%s] has wrong status." , obj.SavingFile );
+	obj.Status = CCEXPORTMAT_ACTIVE;
+	size_t i, sel;
+	const size_t N = obj.M.size();
+	bool ArrayFound = false;
+	for (i=0; i < N; i++) { 
+		if ((obj.M[i])->CompareName(matname) == 0) { sel=i; ArrayFound = true; break; }
+	}
+	if (ArrayFound) {
+		CCEXPMat<T>* U = static_cast<CCEXPMat<T>*>(obj.M[sel].get());
+		int ret = U->AddValue(val);
+		obj.Status = CCEXPORTMAT_READY;
+		if (ret != 0) CCEXP_ERR(obj, ret, "AddVal():: Internal error occured during AddVal() (error: %i)!", ret);
+		return 0;
+	}
+	obj.Status = CCEXPORTMAT_READY;
+	CCEXP_ERR(obj, ERROR::TableNotFound, "AddVal():: Failed to find table with name [%s]!", matname);
+}
+
+template<class T> inline int AddVal(
+	CCEXP &obj,
+	size_t sel,
+	T val
+) {
+	if (!obj.isActive) return 0;
+	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "AddVal():: CCEXP object with filename [%s] has wrong status." , obj.SavingFile );
+	obj.Status = CCEXPORTMAT_ACTIVE;
+	if (sel < obj.M.size()) {
+		CCEXPMat<T>* U = static_cast<CCEXPMat<T>*>(obj.M[sel].get());
+		int ret = U->AddVal(val);
+		obj.Status = CCEXPORTMAT_READY;
+		if (ret != 0) CCEXP_ERR(obj, ret, "AddVal():: Internal error occured during AddVal() (error: %i)!", ret);
+		return 0;
+	}
+	obj.Status = CCEXPORTMAT_READY;
+	CCEXP_ERR(obj, ERROR::TableNotFound, "AddVal():: Failed to find table with ID [%lu]!", (uint64_t)sel);
+}
+
+
+template<class T> inline int AppendRow(
+	CCEXP &obj,
+	const char* matname,
+	size_t row,
+	T* ptr,
+	size_t n
+) {
+	if (!obj.isActive) return 0;
+	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "AppendRow():: CCEXP object with filename [%s] has wrong status." , obj.SavingFile );
+	obj.Status = CCEXPORTMAT_ACTIVE;
+	size_t i, sel;
+	const size_t N = obj.M.size();
+	bool ArrayFound = false;
+	for (i=0; i < N; i++) { 
+		if ((obj.M[i])->CompareName(matname) == 0) { sel=i; ArrayFound = true; break; }
+	}
+	if (ArrayFound) {
+		CCEXPMat<T>* U = static_cast<CCEXPMat<T>*>(obj.M[sel].get());
+		int ret = U->AppendRow(row, ptr, n);
+		obj.Status = CCEXPORTMAT_READY;
+		if (ret != 0) CCEXP_ERR(obj, ret, "AppendRow():: Internal error occured during AppendRow() (error: %i)!", ret);
+		return 0;
+	}
+	obj.Status = CCEXPORTMAT_READY;
+	CCEXP_ERR(obj, ERROR::TableNotFound, "AppendRow():: Failed to find table with name [%s]!", matname);
+}
+template<class T> inline int AppendRow(
+	CCEXP &obj,
+	size_t sel,
+	size_t row,
+	T* ptr,
+	size_t n
+) {
+	if (!obj.isActive) return 0;
+	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "AppendRow():: CCEXP object with filename [%s] has wrong status." , obj.SavingFile );
+	obj.Status = CCEXPORTMAT_ACTIVE;
+	if (sel < obj.M.size()) {
+		CCEXPMat<T>* U = static_cast<CCEXPMat<T>*>(obj.M[sel].get());
+		int ret = U->AppendRow(row, ptr, n);
+		obj.Status = CCEXPORTMAT_READY;
+		if (ret != 0) CCEXP_ERR(obj, ret, "AppendRow():: Internal error occured during AppendRow() (error: %i)!", ret);
+		return 0;
+	}
+	obj.Status = CCEXPORTMAT_READY;
+	CCEXP_ERR(obj, ERROR::TableNotFound, "AppendRow():: Failed to find table with ID [%lu]!", (uint64_t)sel);
+}
+
+
+
+
 
 }; // namespace CCEXP
 

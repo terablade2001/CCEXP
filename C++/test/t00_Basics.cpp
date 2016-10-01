@@ -21,6 +21,10 @@ int main(int argc, char **argv) {
     CCEXP::AddTable <uint8_t>(DBG,"T_U8","uint8");
     CCEXP::AddTable <float>(DBG,"T_F32","single");
 	CCEXP::AddTable <uint8_t>(DBG,"TestMaxR","uint8",3);
+	CCEXP::AddTable <int>(DBG,"AddVal","int32");
+	CCEXP::AddTable <int>(DBG,"DeleteRow","int32");
+	CCEXP::AddTable <int>(DBG,"DeleteLastElement","int32");
+	CCEXP::AddTable <int>(DBG,"AppendRow","int32");
 	
 	// Add a third table, but for this 'debug-session' ignore it completely.
 	// If need to re-enable it, just remove letter I
@@ -77,6 +81,43 @@ int main(int argc, char **argv) {
 	
 	delete[] pU8;
 	delete[] pF32;
+	
+	// Test "AddVal" & "DeleteLastRow"
+	for (int j = 0; j < 3; j++)
+		for (int i = 0; i < 4; i++)
+			CCEXP::AddVal(DBG,"AddVal",j*4+i);
+	CCEXP::NewLine(DBG,"AddVal");
+	for (int i=0; i < 5; i++) CCEXP::AddVal(DBG,"AddVal",i);
+	
+	CCEXP::NewLine(DBG,"AddVal");
+	for (int i=0; i < 3; i++) CCEXP::AddVal(DBG,"AddVal",i);
+	CCEXP::DeleteLastRow(DBG,"AddVal");
+	for (int i=5; i < 8; i++) CCEXP::AddVal(DBG,"AddVal",i);
+
+
+	// Test "DeleteRow"
+	for (int i=0; i < 10; i++) {
+		CCEXP::AddVal(DBG,"DeleteRow",i); CCEXP::NewLine(DBG,"DeleteRow");
+	}
+	CCEXP::DeleteRow(DBG,"DeleteRow",3);
+	
+	// Test "DeleteLastElement"
+	for (int j=0; j < 3; j++) {
+		for (int i=0; i < 5; i++) CCEXP::AddVal(DBG,"DeleteLastElement",i);
+		CCEXP::NewLine(DBG,"DeleteLastElement");
+	}
+	CCEXP::DeleteLastElement(DBG,"DeleteLastElement",1);
+	CCEXP::DeleteLastElement(DBG,"DeleteLastElement",1);
+	CCEXP::DeleteLastElement(DBG,"DeleteLastElement",1);
+		
+	
+	// Test "AppendRow"
+	for (int j=0; j < 3; j++) {
+		for (int i=0; i < 5; i++) CCEXP::AddVal(DBG,"AppendRow",i);
+		CCEXP::NewLine(DBG,"AppendRow");
+	}
+	int AppendRowData[3] = {21, 22, 23};
+	CCEXP::AppendRow<int>(DBG,"AppendRow",1,AppendRowData,3);
 	
 	// Store all DBG data. This will clear the data of all Tables,
 	// but will not remove the tables; you can re-add new data.

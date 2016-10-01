@@ -8,21 +8,6 @@
 	B) Error Number explanation function should be considered.
 
 RECORDING SYSTEM
-* AddValue
-	Add the AddVal() functions..
-	
-* DeleteLastRow
-	Delete the last Row of a Table. Cursor position return to last element of previous row, and next data will continue there.
-
-* DeleteRow
-	Delete a specific row from a table.
-
-* DeleteLastElement
-	Delete the last element of a specific row.
-
-* AppendRow
-	Instead of creating a new row to copy data from a pointer, resize last row and append data there.
-
 * getTableID
 	Return the Table ID, given it's name, for direct access.
 
