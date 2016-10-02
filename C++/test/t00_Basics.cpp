@@ -16,7 +16,6 @@ int main(int argc, char **argv) {
 	__CCEXP_ERR_DISPLAY(DBG,-1); // Display the error and continue...
 	
 
-
 	// Add two tables for uint8_t and float data
     CCEXP::AddTable <uint8_t>(DBG,"T_U8","uint8");
     CCEXP::AddTable <float>(DBG,"T_F32","single");
@@ -25,6 +24,10 @@ int main(int argc, char **argv) {
 	CCEXP::AddTable <int>(DBG,"DeleteRow","int32");
 	CCEXP::AddTable <int>(DBG,"DeleteLastElement","int32");
 	CCEXP::AddTable <int>(DBG,"AppendRow","int32");
+	CCEXP::AddTable <int>(DBG,"ReplaceRow","int32");
+	CCEXP::AddTable <int>(DBG,"SetVal","int32");
+	CCEXP::AddTable <int>(DBG,"InitRowByScalar","int32");
+	CCEXP::AddTable <size_t>(DBG,"getTableID","uint64");
 	
 	// Add a third table, but for this 'debug-session' ignore it completely.
 	// If need to re-enable it, just remove letter I
@@ -118,6 +121,46 @@ int main(int argc, char **argv) {
 	}
 	int AppendRowData[3] = {21, 22, 23};
 	CCEXP::AppendRow<int>(DBG,"AppendRow",1,AppendRowData,3);
+	
+	// Test "ReplaceRow"
+	for (int j=0; j < 3; j++) {
+		for (int i=0; i < 5; i++) CCEXP::AddVal(DBG,"ReplaceRow",i);
+		CCEXP::NewLine(DBG,"ReplaceRow");
+	}
+	int ReplaceRowData[3] = {31, 32, 33};
+	CCEXP::ReplaceRow<int>(DBG,"ReplaceRow",1,ReplaceRowData,3);
+	
+	// Test "SetVal"
+	for (int i=0; i < 5; i++) CCEXP::AddVal(DBG,"SetVal",i);
+	CCEXP::SetVal<int>(DBG,"SetVal",0,2,-11);
+	CCEXP::SetVal<int>(DBG,"SetVal",0,4,-12);
+	
+	// Test "InitRowByScalar"
+	CCEXP::InitRowByScalar(DBG,"InitRowByScalar",-1,7,3);
+	CCEXP::InitRowByScalar(DBG,"InitRowByScalar",-1,7,4);
+	CCEXP::InitRowByScalar(DBG,"InitRowByScalar",0,3,2);
+	CCEXP::InitRowByScalar(DBG,"InitRowByScalar",-1,0,0);
+	
+	// Test "GetTableID"
+	size_t TableID;
+	CCEXP::getTableID(DBG,"AddVal", TableID);            CCEXP::AddVal(DBG,"getTableID",TableID);
+	CCEXP::getTableID(DBG,"DeleteLastElement", TableID); CCEXP::AddVal(DBG,"getTableID",TableID);
+	CCEXP::getTableID(DBG,"SetVal", TableID);            CCEXP::AddVal(DBG,"getTableID",TableID);
+	
+	
+	// Test "getTableName"
+	printf("\n\n");
+	char* TableName = NULL;
+	CCEXP::getTableName(DBG,3,TableName);
+	printf("Table Name of Table with ID (%lu) is: %s\n", (uint64_t)3, TableName);
+	CCEXP::getTableName(DBG,5,TableName);
+	printf("Table Name of Table with ID (%lu) is: %s\n", (uint64_t)5, TableName);
+	CCEXP::getTableName(DBG,8,TableName);
+	printf("Table Name of Table with ID (%lu) is: %s\n", (uint64_t)8, TableName);
+	
+	
+	
+	 __CCEXP_ERR_DISPLAY(DBG,-1);
 	
 	// Store all DBG data. This will clear the data of all Tables,
 	// but will not remove the tables; you can re-add new data.

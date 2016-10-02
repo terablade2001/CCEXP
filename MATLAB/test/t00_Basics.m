@@ -38,4 +38,18 @@ fprintf('Checking AppendRow\n');
 fprintf('d.AppendRow{2} must have values: 0,1,2,3,4,21,22,23 .... \n');
 d.AppendRow{2}
 
+fprintf('Checking ReplaceRow\n');
+fprintf('d.ReplaceRow{2} must have values: 31,32,33 .... \n');
+d.ReplaceRow{2}
 
+fprintf('Checking SetVal\n');
+fprintf('d.SetVal{1} must have values: 0,1,-11,3,-12 .... \n');
+d.SetVal{1}
+
+fprintf('Checking InitRowByScalar\n');
+fprintf('d.InitRowByScalar{1:3} must have values: [3 3],[7 7 7 7],[] .... \n');
+d.InitRowByScalar{1:3}
+
+fprintf('Checking getTableID\n');
+fprintf('d.getTableID{1} must have values: 3, 5, 8 .... \n');
+d.getTableID{1}

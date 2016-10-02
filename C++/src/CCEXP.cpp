@@ -322,6 +322,25 @@ int DeleteLastElement(CCEXP &obj, size_t sel, size_t row) {
 }
 
 
+int getTableID(CCEXP &obj, const char* matname, size_t &sel) {
+	obj.Status = CCEXPORTMAT_ACTIVE;
+	const size_t N = obj.M.size();
+	for (size_t i = 0; i < N; i++) { 
+		if ((obj.M[i])->CompareName(matname) == 0) { obj.Status = CCEXPORTMAT_READY; sel = i; return 0; }
+	}
+	obj.Status = CCEXPORTMAT_READY;
+	CCEXP_ERR(obj, ERROR::TableNotFound, "getTableID():: Table with name = %s was not found!...", matname);
+}
+
+int getTableName(CCEXP &obj, size_t sel, char* &matname) {
+	obj.Status = CCEXPORTMAT_ACTIVE;
+	const size_t N = obj.M.size();
+	if (sel >= N) CCEXP_ERR(obj, ERROR::TableNotFound, "getTableName():: Table with ID = %lu was not found!... (Table ID >= CCEXP Tables)", (uint64_t)sel);
+	matname = obj.M[sel]->getName();
+	obj.Status = CCEXPORTMAT_READY;
+	return 0;
+}
+
 
 int Reset(CCEXP &obj) {
 	obj.Status = CCEXPORTMAT_INIT;

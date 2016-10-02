@@ -7,21 +7,16 @@
 	A) When an error is occurred a different value than -1 should be returned, with much more meaning!
 	B) Error Number explanation function should be considered.
 
-RECORDING SYSTEM
-* getTableID
-	Return the Table ID, given it's name, for direct access.
+* Simplify code.
+	1. Remove multiple duplications (i.e. common Table-Search code in every method)
+	2. Make code more readable
 
-* getTableName
-	Return the Table Name, given it's ID, for reference (i.e. error tracking).
+* Add Documentation to the code (doxygen based), thus users can understand it more easily.
+
 	
-	
-* SetVal
-	Set a new value/object at a specific row-column
-	
-* ReplaceRow
-	Replace a specific row, with new data.
-	
-	
+RECORDING SYSTEM
+---	
+
 LOADING / READING SYSTEM
 		
 * Create the LOADing system
