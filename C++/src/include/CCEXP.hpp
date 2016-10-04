@@ -181,6 +181,7 @@ template<class T> CCEXPMat<T>::~CCEXPMat() { }
 
 template<class T> int CCEXPMat<T>::Initialize(const char* Name, const char* typeName, size_t MaxRows, CCEXP* par) {
 	__parent = par; // Keep a pointer to the parent object for error tracking.
+	memset(name,0,64); memset(type,0,64); // Set all bytes to 0.
 	sprintf(name,"%s",Name); sprintf(type,"%s",typeName);
 	data.clear();
 	_maxRows = (MaxRows == 0) ?  std::numeric_limits<size_t>::max() : MaxRows;
