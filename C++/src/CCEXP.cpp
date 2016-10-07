@@ -40,6 +40,12 @@ CCEXP::~CCEXP() {
 	Status = CCEXPORTMAT_DIED;
 }
 
+size_t CCEXP::getTableIndexByName(const char* Name) {
+	size_t sel = -1;
+	for (size_t i = 0; i < M.size(); i++)
+		if ((M[i])->CompareName(Name) == 0) { sel=i; break; }
+	return sel;	
+}
 
 
 //@#: ############### CCEXP API Functions ###############
@@ -111,34 +117,7 @@ int StoreIData(CCEXP &obj) {
 
 
 
-int NewLine(
-	CCEXP &obj,
-	const char *matname,
-	int empty
-) {
-	if (!obj.isActive) return 0;
-	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "NewLine():: CCEXP Table with name [%s] has wrong status." , matname );
-	obj.Status = CCEXPORTMAT_ACTIVE;
-	size_t i, sel;
-	const size_t N = obj.M.size();
-	bool ArrayFound = false;
-	for (i=0; i < N; i++) { 
-		if ((obj.M[i])->CompareName(matname) == 0) { sel=i; ArrayFound = true; break; }
-	}
-	if (ArrayFound) {
-		int ret = (obj.M[sel])->NewLine(empty);
-		obj.Status = CCEXPORTMAT_READY;
-		if (ret != 0) CCEXP_ERR(obj, ret, "NewLine():: Table with name = %s return error during call to NewLine...", matname);
-		return 0;
-	}
-	obj.Status = CCEXPORTMAT_READY;
-	CCEXP_ERR(obj, ERROR::TableNotFound, "NewLine():: Table with name = %s was not found!...", matname);
-}
-int NewLine(
-	CCEXP &obj,
-	size_t sel,
-	int empty
-) {
+int NewLine(CCEXP &obj, size_t sel, int empty) {
 	if (!obj.isActive) return 0;
 	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "NewLine():: CCEXP Table with ID [%lu] has wrong status." , (uint64_t)sel );
 	obj.Status = CCEXPORTMAT_ACTIVE;
@@ -151,27 +130,10 @@ int NewLine(
 	obj.Status = CCEXPORTMAT_READY;
 	CCEXP_ERR(obj, ERROR::TableNotFound, "NewLine():: Table with ID = %lu was not found!...", (uint64_t)sel);
 }
-
-
-
-int Rows(CCEXP &obj, const char* matname, size_t &rows) {
-	if (!obj.isActive) return 0;
-	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "Rows():: CCEXP Table with name [%s] has wrong status." , matname );
-	obj.Status = CCEXPORTMAT_ACTIVE;
-	size_t i, sel;
-	const size_t N = obj.M.size();
-	bool ArrayFound = false;
-	for (i=0; i < N; i++) { 
-		if ((obj.M[i])->CompareName(matname) == 0) { sel=i; ArrayFound = true; break; }
-	}
-	if (ArrayFound) {
-		int ret = (obj.M[sel])->Rows(rows);
-		obj.Status = CCEXPORTMAT_READY;
-		if (ret != 0) CCEXP_ERR(obj, ret, "Rows():: Table with name = %s return error during call to Rows()...", matname);
-		return 0;
-	}
-	obj.Status = CCEXPORTMAT_READY;
-	CCEXP_ERR(obj, ERROR::TableNotFound, "Rows():: Table with name = %s was not found!...", matname);
+int NewLine(CCEXP &obj, const char *matname, int empty) {
+	size_t sel = obj.getTableIndexByName(matname);
+	if (sel == -1) CCEXP_ERR(obj, ERROR::TableNotFound, "NewLine():: Failed to find table with name [%s]!", matname);
+	return NewLine(obj, sel, empty); 
 }
 
 
@@ -188,27 +150,12 @@ int Rows(CCEXP &obj, size_t sel, size_t &rows) {
 	obj.Status = CCEXPORTMAT_READY;
 	CCEXP_ERR(obj, ERROR::TableNotFound, "Rows():: Table with ID = %lu was not found!...", (uint64_t)sel);
 }
-
-
-int Cols(CCEXP &obj, const char* matname, size_t row, size_t &cols) {
-	if (!obj.isActive) return 0;
-	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "Cols():: CCEXP Table with name [%s] has wrong status." , matname );
-	obj.Status = CCEXPORTMAT_ACTIVE;
-	size_t i, sel;
-	const size_t N = obj.M.size();
-	bool ArrayFound = false;
-	for (i=0; i < N; i++) { 
-		if ((obj.M[i])->CompareName(matname) == 0) { sel=i; ArrayFound = true; break; }
-	}
-	if (ArrayFound) {
-		int ret = (obj.M[sel])->Cols(row, cols);
-		obj.Status = CCEXPORTMAT_READY;
-		if (ret != 0) CCEXP_ERR(obj, ret, "Cols():: Table with name = %s return error during call to Cols()...", matname);
-		return 0;
-	}
-	obj.Status = CCEXPORTMAT_READY;
-	CCEXP_ERR(obj, ERROR::TableNotFound, "Cols():: Table with name = %s was not found!...", matname);
+int Rows(CCEXP &obj, const char* matname, size_t &rows) {
+	size_t sel = obj.getTableIndexByName(matname);
+	if (sel == -1) CCEXP_ERR(obj, ERROR::TableNotFound, "Rows():: Failed to find table with name [%s]!", matname);
+	return Rows(obj, sel, rows); 
 }
+
 
 int Cols(CCEXP &obj, size_t sel, size_t row, size_t &cols) {
 	if (!obj.isActive) return 0;
@@ -222,27 +169,12 @@ int Cols(CCEXP &obj, size_t sel, size_t row, size_t &cols) {
 	obj.Status = CCEXPORTMAT_READY;
 	CCEXP_ERR(obj, ERROR::TableNotFound, "Cols():: Table with ID = %lu was not found!...", (uint64_t)sel);
 }
-
-
-int DeleteLastRow(CCEXP &obj, const char* matname) {
-	if (!obj.isActive) return 0;
-	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "DeleteLastRow():: CCEXP Table with name [%s] has wrong status." , matname );
-	obj.Status = CCEXPORTMAT_ACTIVE;
-	size_t i, sel;
-	const size_t N = obj.M.size();
-	bool ArrayFound = false;
-	for (i=0; i < N; i++) { 
-		if ((obj.M[i])->CompareName(matname) == 0) { sel=i; ArrayFound = true; break; }
-	}
-	if (ArrayFound) {
-		int ret = (obj.M[sel])->DeleteLastRow();
-		obj.Status = CCEXPORTMAT_READY;
-		if (ret != 0) CCEXP_ERR(obj, ret, "DeleteLastRow():: Table with name = %s return error during call to DeleteLastRow()...", matname);
-		return 0;
-	}
-	obj.Status = CCEXPORTMAT_READY;
-	CCEXP_ERR(obj, ERROR::TableNotFound, "DeleteLastRow():: Table with name = %s was not found!...", matname);
+int Cols(CCEXP &obj, const char* matname, size_t row, size_t &cols) {
+	size_t sel = obj.getTableIndexByName(matname);
+	if (sel == -1) CCEXP_ERR(obj, ERROR::TableNotFound, "Cols():: Failed to find table with name [%s]!", matname);
+	return Cols(obj, sel, row, cols); 
 }
+
 int DeleteLastRow(CCEXP &obj, size_t sel) {
 	if (!obj.isActive) return 0;
 	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "DeleteLastRow():: CCEXP Table with ID [%lu] has wrong status." , (uint64_t)sel );
@@ -255,26 +187,12 @@ int DeleteLastRow(CCEXP &obj, size_t sel) {
 	obj.Status = CCEXPORTMAT_READY;
 	CCEXP_ERR(obj, ERROR::TableNotFound, "DeleteLastRow():: Table with ID = %lu was not found!...", (uint64_t)sel);
 }
-
-int DeleteRow(CCEXP &obj, const char* matname, size_t row) {
-	if (!obj.isActive) return 0;
-	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "DeleteRow():: CCEXP Table with name [%s] has wrong status." , matname );
-	obj.Status = CCEXPORTMAT_ACTIVE;
-	size_t i, sel;
-	const size_t N = obj.M.size();
-	bool ArrayFound = false;
-	for (i=0; i < N; i++) { 
-		if ((obj.M[i])->CompareName(matname) == 0) { sel=i; ArrayFound = true; break; }
-	}
-	if (ArrayFound) {
-		int ret = (obj.M[sel])->DeleteRow(row);
-		obj.Status = CCEXPORTMAT_READY;
-		if (ret != 0) CCEXP_ERR(obj, ret, "DeleteRow():: Table with name = %s return error during call to DeleteRow()...", matname);
-		return 0;
-	}
-	obj.Status = CCEXPORTMAT_READY;
-	CCEXP_ERR(obj, ERROR::TableNotFound, "DeleteRow():: Table with name = %s was not found!...", matname);
+int DeleteLastRow(CCEXP &obj, const char* matname) {
+	size_t sel = obj.getTableIndexByName(matname);
+	if (sel == -1) CCEXP_ERR(obj, ERROR::TableNotFound, "DeleteLastRow():: Failed to find table with name [%s]!", matname);
+	return DeleteLastRow(obj, sel); 
 }
+
 int DeleteRow(CCEXP &obj, size_t sel, size_t row) {
 	if (!obj.isActive) return 0;
 	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "DeleteRow():: CCEXP Table with ID [%lu] has wrong status." , (uint64_t)sel );
@@ -287,27 +205,13 @@ int DeleteRow(CCEXP &obj, size_t sel, size_t row) {
 	obj.Status = CCEXPORTMAT_READY;
 	CCEXP_ERR(obj, ERROR::TableNotFound, "DeleteRow():: Table with ID = %lu was not found!...", (uint64_t)sel);
 }
-
-
-int DeleteLastElement(CCEXP &obj, const char* matname, size_t row) {
-	if (!obj.isActive) return 0;
-	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "DeleteLastElement():: CCEXP Table with name [%s] has wrong status." , matname );
-	obj.Status = CCEXPORTMAT_ACTIVE;
-	size_t i, sel;
-	const size_t N = obj.M.size();
-	bool ArrayFound = false;
-	for (i=0; i < N; i++) { 
-		if ((obj.M[i])->CompareName(matname) == 0) { sel=i; ArrayFound = true; break; }
-	}
-	if (ArrayFound) {
-		int ret = (obj.M[sel])->DeleteLastElement(row);
-		obj.Status = CCEXPORTMAT_READY;
-		if (ret != 0) CCEXP_ERR(obj, ret, "DeleteLastElement():: Table with name = %s return error during call to DeleteLastElement()...", matname);
-		return 0;
-	}
-	obj.Status = CCEXPORTMAT_READY;
-	CCEXP_ERR(obj, ERROR::TableNotFound, "DeleteLastElement():: Table with name = %s was not found!...", matname);
+int DeleteRow(CCEXP &obj, const char* matname, size_t row) {
+	size_t sel = obj.getTableIndexByName(matname);
+	if (sel == -1) CCEXP_ERR(obj, ERROR::TableNotFound, "DeleteRow():: Failed to find table with name [%s]!", matname);
+	return DeleteRow(obj, sel, row); 
 }
+
+
 int DeleteLastElement(CCEXP &obj, size_t sel, size_t row) {
 	if (!obj.isActive) return 0;
 	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "DeleteLastElement():: CCEXP Table with ID [%lu] has wrong status." , (uint64_t)sel );
@@ -320,16 +224,18 @@ int DeleteLastElement(CCEXP &obj, size_t sel, size_t row) {
 	obj.Status = CCEXPORTMAT_READY;
 	CCEXP_ERR(obj, ERROR::TableNotFound, "DeleteLastElement():: Table with ID = %lu was not found!...", (uint64_t)sel);
 }
+int DeleteLastElement(CCEXP &obj, const char* matname, size_t row) {
+	size_t sel = obj.getTableIndexByName(matname);
+	if (sel == -1) CCEXP_ERR(obj, ERROR::TableNotFound, "DeleteLastElement():: Failed to find table with name [%s]!", matname);
+	return DeleteLastElement(obj, sel, row); 
+}
 
 
 int getTableID(CCEXP &obj, const char* matname, size_t &sel) {
 	obj.Status = CCEXPORTMAT_ACTIVE;
-	const size_t N = obj.M.size();
-	for (size_t i = 0; i < N; i++) { 
-		if ((obj.M[i])->CompareName(matname) == 0) { obj.Status = CCEXPORTMAT_READY; sel = i; return 0; }
-	}
+	sel = obj.getTableIndexByName(matname);	
 	obj.Status = CCEXPORTMAT_READY;
-	CCEXP_ERR(obj, ERROR::TableNotFound, "getTableID():: Table with name = %s was not found!...", matname);
+	if (sel == -1) CCEXP_ERR(obj, ERROR::TableNotFound, "getTableID():: Failed to find table with name [%s]!", matname);
 }
 
 int getTableName(CCEXP &obj, size_t sel, char* &matname) {

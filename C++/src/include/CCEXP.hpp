@@ -33,7 +33,7 @@
 #include <limits>
 #include <iostream>
 
-#define CCEXP_VERSION (0.015)
+#define CCEXP_VERSION (0.017)
 #define TRACK_ANALYTIC_ERRORS
 
 #ifndef __FNAME__
@@ -82,6 +82,10 @@ enum ERROR {
     Other /// Any other error...
 };
 
+class CCEXPBase;
+template<class T> class CCEXPMat;
+class CCEXP;
+
 //@#| ############### Virtual Base Class ###############
 class CCEXPBase {
 	public:
@@ -99,28 +103,6 @@ class CCEXPBase {
 	virtual int StoreData(FILE *fp) = 0;
 	virtual int Reset(void) = 0;
 };
-
-//@#| ############### CCEXP : This is the Global Class ###############
-class CCEXP {
-	public:
-  
-	FILE* fp;
-	int TotalMatrices;
-	int LoadIndex;
-	int Status;
-	int STCounter;
-	bool isActive;
-	
-	vector<shared_ptr<CCEXPBase>> M;
-	char SavingFile[256];
-	vector<string> Errors;
-	
-	CCEXP();
-	~CCEXP();
-};
-
-
-
 
 //@#| ############### CCEXPMat - Table Class ###############
 template<class T>
@@ -161,7 +143,26 @@ class CCEXPMat : public CCEXPBase {
 		CCEXP* __parent;
 };
 
-
+//@#| ############### CCEXP : This is the Global Class ###############
+class CCEXP {
+	public:
+  
+	FILE* fp;
+	int TotalMatrices;
+	int LoadIndex;
+	int Status;
+	int STCounter;
+	bool isActive;
+	
+	vector<shared_ptr<CCEXPBase>> M;
+	char SavingFile[256];
+	vector<string> Errors;
+	
+	CCEXP();
+	~CCEXP();
+	
+	size_t getTableIndexByName(const char* Name);
+};
 
 
 
@@ -426,33 +427,6 @@ template<class T> inline int AddTableI(
 
 template<class T> inline int AddRow(
 	CCEXP &obj,
-	const char* matname,
-	T* ptr,
-	size_t n
-) {
-	if (!obj.isActive) return 0;
-	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "AddRow():: CCEXP object with filename [%s] has wrong status." , obj.SavingFile );
-	obj.Status = CCEXPORTMAT_ACTIVE;
-	size_t i, sel;
-	const size_t N = obj.M.size();
-	bool ArrayFound = false;
-	for (i=0; i < N; i++) { 
-		if ((obj.M[i])->CompareName(matname) == 0) { sel=i; ArrayFound = true; break; }
-	}
-	if (ArrayFound) {
-		CCEXPMat<T>* U = static_cast<CCEXPMat<T>*>(obj.M[sel].get());
-		int ret = U->AddRow(ptr, n);
-		obj.Status = CCEXPORTMAT_READY;
-		if (ret != 0) CCEXP_ERR(obj, ret, "AddRow():: Internal error occured during AddRow() (error: %i)!", ret);
-		return 0;
-	}
-	obj.Status = CCEXPORTMAT_READY;
-	CCEXP_ERR(obj, ERROR::TableNotFound, "AddRow():: Failed to find table with name [%s]!", matname);
-}
-
-// Overload AddRow
-template<class T> inline int AddRow(
-	CCEXP &obj,
 	size_t sel,
 	T* ptr,
 	size_t n
@@ -470,23 +444,22 @@ template<class T> inline int AddRow(
 	obj.Status = CCEXPORTMAT_READY;
 	CCEXP_ERR(obj, ERROR::TableNotFound, "AddRow():: Failed to find table with ID [%lu]!", (uint64_t)sel);
 }
+template<class T> inline int AddRow(
+	CCEXP &obj, const char* matname, T* ptr, size_t n
+) {
+	size_t sel = obj.getTableIndexByName(matname);
+	if (sel == -1) CCEXP_ERR(obj, ERROR::TableNotFound, "AddRow():: Failed to find table with name [%s]!", matname);
+	return AddRow(obj, sel, ptr, n);
+}
 
 
 template<class T> inline int AddVal(
-	CCEXP &obj,
-	const char* matname,
-	T val
+	CCEXP &obj, size_t sel, T val
 ) {
 	if (!obj.isActive) return 0;
 	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "AddVal():: CCEXP object with filename [%s] has wrong status." , obj.SavingFile );
 	obj.Status = CCEXPORTMAT_ACTIVE;
-	size_t i, sel;
-	const size_t N = obj.M.size();
-	bool ArrayFound = false;
-	for (i=0; i < N; i++) { 
-		if ((obj.M[i])->CompareName(matname) == 0) { sel=i; ArrayFound = true; break; }
-	}
-	if (ArrayFound) {
+	if (sel < obj.M.size()) {
 		CCEXPMat<T>* U = static_cast<CCEXPMat<T>*>(obj.M[sel].get());
 		int ret = U->AddValue(val);
 		obj.Status = CCEXPORTMAT_READY;
@@ -494,61 +467,19 @@ template<class T> inline int AddVal(
 		return 0;
 	}
 	obj.Status = CCEXPORTMAT_READY;
-	CCEXP_ERR(obj, ERROR::TableNotFound, "AddVal():: Failed to find table with name [%s]!", matname);
-}
-
-template<class T> inline int AddVal(
-	CCEXP &obj,
-	size_t sel,
-	T val
-) {
-	if (!obj.isActive) return 0;
-	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "AddVal():: CCEXP object with filename [%s] has wrong status." , obj.SavingFile );
-	obj.Status = CCEXPORTMAT_ACTIVE;
-	if (sel < obj.M.size()) {
-		CCEXPMat<T>* U = static_cast<CCEXPMat<T>*>(obj.M[sel].get());
-		int ret = U->AddVal(val);
-		obj.Status = CCEXPORTMAT_READY;
-		if (ret != 0) CCEXP_ERR(obj, ret, "AddVal():: Internal error occured during AddVal() (error: %i)!", ret);
-		return 0;
-	}
-	obj.Status = CCEXPORTMAT_READY;
 	CCEXP_ERR(obj, ERROR::TableNotFound, "AddVal():: Failed to find table with ID [%lu]!", (uint64_t)sel);
 }
-
-
-template<class T> inline int AppendRow(
-	CCEXP &obj,
-	const char* matname,
-	size_t row,
-	T* ptr,
-	size_t n
+template<class T> int AddVal(
+	CCEXP &obj, const char* matname, T val
 ) {
-	if (!obj.isActive) return 0;
-	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "AppendRow():: CCEXP object with filename [%s] has wrong status." , obj.SavingFile );
-	obj.Status = CCEXPORTMAT_ACTIVE;
-	size_t i, sel;
-	const size_t N = obj.M.size();
-	bool ArrayFound = false;
-	for (i=0; i < N; i++) { 
-		if ((obj.M[i])->CompareName(matname) == 0) { sel=i; ArrayFound = true; break; }
-	}
-	if (ArrayFound) {
-		CCEXPMat<T>* U = static_cast<CCEXPMat<T>*>(obj.M[sel].get());
-		int ret = U->AppendRow(row, ptr, n);
-		obj.Status = CCEXPORTMAT_READY;
-		if (ret != 0) CCEXP_ERR(obj, ret, "AppendRow():: Internal error occured during AppendRow() (error: %i)!", ret);
-		return 0;
-	}
-	obj.Status = CCEXPORTMAT_READY;
-	CCEXP_ERR(obj, ERROR::TableNotFound, "AppendRow():: Failed to find table with name [%s]!", matname);
+	size_t sel = obj.getTableIndexByName(matname);
+	if (sel == -1) CCEXP_ERR(obj, ERROR::TableNotFound, "AddVal():: Failed to find table with name [%s]!", matname);
+	return AddVal(obj, sel, val);
 }
+
+
 template<class T> inline int AppendRow(
-	CCEXP &obj,
-	size_t sel,
-	size_t row,
-	T* ptr,
-	size_t n
+	CCEXP &obj, size_t sel, size_t row, T* ptr, size_t n
 ) {
 	if (!obj.isActive) return 0;
 	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "AppendRow():: CCEXP object with filename [%s] has wrong status." , obj.SavingFile );
@@ -563,41 +494,17 @@ template<class T> inline int AppendRow(
 	obj.Status = CCEXPORTMAT_READY;
 	CCEXP_ERR(obj, ERROR::TableNotFound, "AppendRow():: Failed to find table with ID [%lu]!", (uint64_t)sel);
 }
-
-
-
-template<class T> inline int ReplaceRow(
-	CCEXP &obj,
-	const char* matname,
-	size_t row,
-	T* ptr,
-	size_t n
+template<class T> inline int AppendRow(
+	CCEXP &obj, const char* matname, size_t row, T* ptr, size_t n
 ) {
-	if (!obj.isActive) return 0;
-	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "ReplaceRow():: CCEXP object with filename [%s] has wrong status." , obj.SavingFile );
-	obj.Status = CCEXPORTMAT_ACTIVE;
-	size_t i, sel;
-	const size_t N = obj.M.size();
-	bool ArrayFound = false;
-	for (i=0; i < N; i++) { 
-		if ((obj.M[i])->CompareName(matname) == 0) { sel=i; ArrayFound = true; break; }
-	}
-	if (ArrayFound) {
-		CCEXPMat<T>* U = static_cast<CCEXPMat<T>*>(obj.M[sel].get());
-		int ret = U->ReplaceRow(row, ptr, n);
-		obj.Status = CCEXPORTMAT_READY;
-		if (ret != 0) CCEXP_ERR(obj, ret, "ReplaceRow():: Internal error occured during ReplaceRow() (error: %i)!", ret);
-		return 0;
-	}
-	obj.Status = CCEXPORTMAT_READY;
-	CCEXP_ERR(obj, ERROR::TableNotFound, "ReplaceRow():: Failed to find table with name [%s]!", matname);
+	size_t sel = obj.getTableIndexByName(matname);
+	if (sel == -1) CCEXP_ERR(obj, ERROR::TableNotFound, "AppendRow():: Failed to find table with name [%s]!", matname);
+	return AppendRow(obj, sel, row, ptr, n);
 }
+
+
 template<class T> inline int ReplaceRow(
-	CCEXP &obj,
-	size_t sel,
-	size_t row,
-	T* ptr,
-	size_t n
+	CCEXP &obj, size_t sel, size_t row, T* ptr, size_t n
 ) {
 	if (!obj.isActive) return 0;
 	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "ReplaceRow():: CCEXP object with filename [%s] has wrong status." , obj.SavingFile );
@@ -612,40 +519,17 @@ template<class T> inline int ReplaceRow(
 	obj.Status = CCEXPORTMAT_READY;
 	CCEXP_ERR(obj, ERROR::TableNotFound, "ReplaceRow():: Failed to find table with ID [%lu]!", (uint64_t)sel);
 }
-
-
-template<class T> inline int SetVal(
-	CCEXP &obj,
-	const char* matname,
-	size_t row,
-	size_t col,
-	T val
+template<class T> inline int ReplaceRow(
+	CCEXP &obj, const char* matname, size_t row, T* ptr, size_t n
 ) {
-	if (!obj.isActive) return 0;
-	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "SetVal():: CCEXP object with filename [%s] has wrong status." , obj.SavingFile );
-	obj.Status = CCEXPORTMAT_ACTIVE;
-	size_t i, sel;
-	const size_t N = obj.M.size();
-	bool ArrayFound = false;
-	for (i=0; i < N; i++) { 
-		if ((obj.M[i])->CompareName(matname) == 0) { sel=i; ArrayFound = true; break; }
-	}
-	if (ArrayFound) {
-		CCEXPMat<T>* U = static_cast<CCEXPMat<T>*>(obj.M[sel].get());
-		int ret = U->SetVal(row, col, val);
-		obj.Status = CCEXPORTMAT_READY;
-		if (ret != 0) CCEXP_ERR(obj, ret, "SetVal():: Internal error occured during SetVal() (error: %i)!", ret);
-		return 0;
-	}
-	obj.Status = CCEXPORTMAT_READY;
-	CCEXP_ERR(obj, ERROR::TableNotFound, "SetVal():: Failed to find table with name [%s]!", matname);
+	size_t sel = obj.getTableIndexByName(matname);
+	if (sel == -1) CCEXP_ERR(obj, ERROR::TableNotFound, "ReplaceRow():: Failed to find table with name [%s]!", matname);
+	return ReplaceRow(obj, sel, row, ptr, n);
 }
+
+
 template<class T> inline int SetVal(
-	CCEXP &obj,
-	size_t sel,
-	size_t row,
-	size_t col,
-	T val
+	CCEXP &obj, size_t sel, size_t row, size_t col, T val
 ) {
 	if (!obj.isActive) return 0;
 	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "SetVal():: CCEXP object with filename [%s] has wrong status." , obj.SavingFile );
@@ -660,41 +544,17 @@ template<class T> inline int SetVal(
 	obj.Status = CCEXPORTMAT_READY;
 	CCEXP_ERR(obj, ERROR::TableNotFound, "SetVal():: Failed to find table with ID [%lu]!", (uint64_t)sel);
 }
-
-
-
-template<class T> inline int InitRowByScalar(
-	CCEXP &obj,
-	const char* matname,
-	size_t row,
-	T val,
-	size_t n
+template<class T> inline int SetVal(
+	CCEXP &obj, const char* matname, size_t row, size_t col, T val
 ) {
-	if (!obj.isActive) return 0;
-	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "InitRowByScalar():: CCEXP object with filename [%s] has wrong status." , obj.SavingFile );
-	obj.Status = CCEXPORTMAT_ACTIVE;
-	size_t i, sel;
-	const size_t N = obj.M.size();
-	bool ArrayFound = false;
-	for (i=0; i < N; i++) { 
-		if ((obj.M[i])->CompareName(matname) == 0) { sel=i; ArrayFound = true; break; }
-	}
-	if (ArrayFound) {
-		CCEXPMat<T>* U = static_cast<CCEXPMat<T>*>(obj.M[sel].get());
-		int ret = U->InitRowByScalar(row, val, n);
-		obj.Status = CCEXPORTMAT_READY;
-		if (ret != 0) CCEXP_ERR(obj, ret, "InitRowByScalar():: Internal error occured during InitRowByScalar() (error: %i)!", ret);
-		return 0;
-	}
-	obj.Status = CCEXPORTMAT_READY;
-	CCEXP_ERR(obj, ERROR::TableNotFound, "InitRowByScalar():: Failed to find table with name [%s]!", matname);
+	size_t sel = obj.getTableIndexByName(matname);
+	if (sel == -1) CCEXP_ERR(obj, ERROR::TableNotFound, "SetVal():: Failed to find table with name [%s]!", matname);
+	return SetVal(obj, sel, row, col, val);
 }
+
+
 template<class T> inline int InitRowByScalar(
-	CCEXP &obj,
-	size_t sel,
-	size_t row,
-	T val,
-	size_t n
+	CCEXP &obj, size_t sel, size_t row, T val, size_t n
 ) {
 	if (!obj.isActive) return 0;
 	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "InitRowByScalar():: CCEXP object with filename [%s] has wrong status." , obj.SavingFile );
@@ -708,6 +568,13 @@ template<class T> inline int InitRowByScalar(
 	}
 	obj.Status = CCEXPORTMAT_READY;
 	CCEXP_ERR(obj, ERROR::TableNotFound, "InitRowByScalar():: Failed to find table with ID [%lu]!", (uint64_t)sel);
+}
+template<class T> inline int InitRowByScalar(
+	CCEXP &obj, const char* matname, size_t row, T val, size_t n
+) {
+	size_t sel = obj.getTableIndexByName(matname);
+	if (sel == -1) CCEXP_ERR(obj, ERROR::TableNotFound, "InitRowByScalar():: Failed to find table with name [%s]!", matname);
+	return InitRowByScalar(obj, sel, row, val, n);
 }
 
 }; // namespace CCEXP

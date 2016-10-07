@@ -103,6 +103,8 @@ int main(int argc, char **argv) {
 		CCEXP::AddVal(DBG,"DeleteRow",i); CCEXP::NewLine(DBG,"DeleteRow");
 	}
 	CCEXP::DeleteRow(DBG,"DeleteRow",3);
+	CCEXP::DeleteRow(DBG,"DeleteRow",8);
+	__CCEXP_ERR_DISPLAY(DBG,-1);
 	
 	// Test "DeleteLastElement"
 	for (int j=0; j < 3; j++) {
@@ -134,19 +136,22 @@ int main(int argc, char **argv) {
 	for (int i=0; i < 5; i++) CCEXP::AddVal(DBG,"SetVal",i);
 	CCEXP::SetVal<int>(DBG,"SetVal",0,2,-11);
 	CCEXP::SetVal<int>(DBG,"SetVal",0,4,-12);
+	__CCEXP_ERR_DISPLAY(DBG,-1);
 	
 	// Test "InitRowByScalar"
 	CCEXP::InitRowByScalar(DBG,"InitRowByScalar",-1,7,3);
 	CCEXP::InitRowByScalar(DBG,"InitRowByScalar",-1,7,4);
 	CCEXP::InitRowByScalar(DBG,"InitRowByScalar",0,3,2);
 	CCEXP::InitRowByScalar(DBG,"InitRowByScalar",-1,0,0);
+	__CCEXP_ERR_DISPLAY(DBG,-1);
 	
 	// Test "GetTableID"
 	size_t TableID;
 	CCEXP::getTableID(DBG,"AddVal", TableID);            CCEXP::AddVal(DBG,"getTableID",TableID);
 	CCEXP::getTableID(DBG,"DeleteLastElement", TableID); CCEXP::AddVal(DBG,"getTableID",TableID);
 	CCEXP::getTableID(DBG,"SetVal", TableID);            CCEXP::AddVal(DBG,"getTableID",TableID);
-	
+	__CCEXP_ERR_DISPLAY(DBG,-1);
+
 	
 	// Test "getTableName"
 	printf("\n\n");
