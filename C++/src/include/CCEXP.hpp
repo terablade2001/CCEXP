@@ -33,7 +33,7 @@
 #include <limits>
 #include <iostream>
 
-#define CCEXP_VERSION (0.017)
+#define CCEXP_VERSION (0.018)
 #define TRACK_ANALYTIC_ERRORS
 
 #ifndef __FNAME__
@@ -72,12 +72,14 @@ namespace CCEXP {
 enum ERROR {
     StatusNotInit = -9999, /// CCEXP object had status different that CCEXPORTMAT_INIT. (i.e. not Reseted before re-Initialize)
     StatusNotReady, /// CCEXP object was not at READY state when a new call to it was requested (thread-safe).
+	StatusIsWrong, /// Generic wrong status message (i.e. for Load())
     IO_Error, /// Access to a I/O file failed (i.e. FILE* fp = fopen(...) == NULL )
     MaximumRowsReached, /// When Adding a new row, and maximum rows have been reached!
 	ReqRowLargerThanInTable, /// When a requested row index is larger than the maximum rows in Table.
 	ReqColumnLargerThanInRow, /// When a requested column index is larger than the maximum columns in a Table's row.
 	TableNotFound, /// When a table is not found...
 	TableHasNoRows, /// When a table has no rows, but it's requested to do something on a row.
+	DublicatedTable, /// When a table is added which has the same name with other table.
 	
     Other /// Any other error...
 };
@@ -162,6 +164,9 @@ class CCEXP {
 	~CCEXP();
 	
 	size_t getTableIndexByName(const char* Name);
+	size_t checkDuplicatedNames(const char* Name);
+	
+	void setStatus(int st);
 };
 
 
@@ -387,6 +392,7 @@ int getTableID(CCEXP &obj, const char* matname, size_t &sel);
 int getTableName(CCEXP &obj, size_t sel, char* &matname);
 int Reset(CCEXP &obj);
 int GetErrors(CCEXP &obj, vector<string>* &ptrError, size_t &NumberOfErrors);
+int DBG_SetStatus(CCEXP &obj, int status);
 
 //@#: ############### Templates API Functions ###############
 template<class T> inline int AddTable (
@@ -398,6 +404,8 @@ template<class T> inline int AddTable (
 	if (!obj.isActive) return 0;
 	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "AddTable():: CCEXP object with filename [%s] has wrong status." , obj.SavingFile );
 	obj.Status = CCEXPORTMAT_ACTIVE;
+	size_t rd = obj.checkDuplicatedNames(matname);
+	if (rd > 0) CCEXP_ERR(obj, ERROR::DublicatedTable , "AddTable()::  Table with name [%s] already exist!", matname);
 	obj.M.push_back(shared_ptr<CCEXPBase>((CCEXPBase*) new CCEXPMat<T>));
 	CCEXPMat<T>* U = static_cast<CCEXPMat<T>*>(obj.M[obj.M.size()-1].get());
 	int ret = U->Initialize(matname, typeName, MaxRows, &obj);
@@ -415,6 +423,8 @@ template<class T> inline int AddTableI(
 	if (!obj.isActive) return 0;
 	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "AddTableI():: CCEXP object with filename [%s] has wrong status." , obj.SavingFile );
 	obj.Status = CCEXPORTMAT_ACTIVE;
+	size_t rd = obj.checkDuplicatedNames(matname);
+	if (rd > 0) CCEXP_ERR(obj, ERROR::DublicatedTable , "AddTable()::  Table with name [%s] already exist!", matname);
 	obj.M.push_back(shared_ptr<CCEXPBase>((CCEXPBase*) new CCEXPMat<T>));
 	CCEXPMat<T>* U = static_cast<CCEXPMat<T>*>(obj.M[obj.M.size()-1].get());
 	int ret = U->Initialize(matname, typeName, MaxRows, &obj);	

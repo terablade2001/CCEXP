@@ -1,6 +1,20 @@
 // Include the CCEXP library
 #include "../src/include/CCEXP.hpp"
 
+// Demo/Debugging tool. Enable or Comment ERROR_STOP, to stop on Errors or
+// to force debugging behaviour and continue.
+// * For this UnitsTests Demo I have not set ERROR_STOP thus every error
+// just shows an error message and moves on. 
+
+// #define ERROR_STOP
+#ifdef ERROR_STOP
+	#define _DBG_ERROR_STOP_OR_CONTINUE_(x) \
+		__CCEXP_ERR_DISPLAY(DBG,-1); if ((x).Status != 1) return (x).Status;
+#else	
+	#define _DBG_ERROR_STOP_OR_CONTINUE_(x) \
+		__CCEXP_ERR_DISPLAY(DBG,-1); CCEXP::DBG_SetStatus((x), 1);
+#endif
+
 // Define a CCEXP object (DBG)
 CCEXP::CCEXP DBG;
 
@@ -8,16 +22,21 @@ int main(int argc, char **argv) {
 	// Initialize DBG object, and set it a Filename where it will store
 	// it's data when CCEXP::StoreData() fuction is called.
 	CCEXP::Initialize(DBG,"DataFile.ccexp");
-	__CCEXP_ERR_DISPLAY(DBG,-1);
-    
+	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
 	
+    	
 	// Do a second initialization.. This will procude an error!
-    CCEXP::Initialize(DBG,"DataFile.ccexp");
-	__CCEXP_ERR_DISPLAY(DBG,-1); // Display the error and continue...
+		CCEXP::Initialize(DBG,"DataFile.ccexp");	
+printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
+		_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
 	
 
-	// Add two tables for uint8_t and float data
+	// Add Tables
     CCEXP::AddTable <uint8_t>(DBG,"T_U8","uint8");
+	// Add the same table twice. This also must produce an error.
+		CCEXP::AddTable <float>(DBG,"T_U8","uint8");
+printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
+		_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
     CCEXP::AddTable <float>(DBG,"T_F32","single");
 	CCEXP::AddTable <uint8_t>(DBG,"TestMaxR","uint8",3);
 	CCEXP::AddTable <int>(DBG,"AddVal","int32");
@@ -56,30 +75,40 @@ int main(int argc, char **argv) {
 		else CCEXP::NewLine(DBG,"T_F32",1);		
 	}
 	
-	 // Add 5 New Empty Lines to TestMaxR (ID=2). Errors should hit after 3 max lines
+	// Until the below line, there should not be any error.
+	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+		
+	 // Add 5 New Empty Lines to TestMaxR (ID=2).
+	 // Notice that Table with ID=2 (TestMaxR) is added with maximum Rows set
+	 // to 3 (by AddMatrix()). Thus errors should hit after 3 max lines.
 	for (int row = 0; row < 5; row++) CCEXP::NewLine(DBG,2,1);
-	__CCEXP_ERR_DISPLAY(DBG,-1);
+printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
+	_DBG_ERROR_STOP_OR_CONTINUE_(DBG); 
 	
 	
 	size_t R0; CCEXP::Rows(DBG, "T_U8", R0);
 	printf("\nTable T_U8 has [%lu] rows\n", (uint64_t)R0);
 	
-	
+		
 	size_t SelRow = 255;
 	size_t C0; CCEXP::Cols(DBG, "T_U8", SelRow, C0);
 	printf("\nRow [%lu] of Table T_U8 has [%lu] columns\n", SelRow, (size_t)C0);
-	__CCEXP_ERR_DISPLAY(DBG,-1);
+	
+	// After TestMaxR table, no more errors should exist in the following test.
+	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
 	
 	
 	
 	// Test Cols Error handling... (Wrong SelRow)
-	SelRow = 512; CCEXP::Cols(DBG, "T_U8", SelRow, C0);
-	__CCEXP_ERR_DISPLAY(DBG,-1);
+	// Error must occur in the following call.
+		SelRow = 512; CCEXP::Cols(DBG, "T_U8", SelRow, C0);
+printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
+		_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
 	
 	// Test Rows Error handling (False Table Name)
 	SelRow = 512; CCEXP::Cols(DBG, "T_UU88", SelRow, C0);
-	__CCEXP_ERR_DISPLAY(DBG,-1);
-	
+printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
+	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
 	
 	
 	delete[] pU8;
@@ -104,7 +133,7 @@ int main(int argc, char **argv) {
 	}
 	CCEXP::DeleteRow(DBG,"DeleteRow",3);
 	CCEXP::DeleteRow(DBG,"DeleteRow",8);
-	__CCEXP_ERR_DISPLAY(DBG,-1);
+	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
 	
 	// Test "DeleteLastElement"
 	for (int j=0; j < 3; j++) {
@@ -136,21 +165,21 @@ int main(int argc, char **argv) {
 	for (int i=0; i < 5; i++) CCEXP::AddVal(DBG,"SetVal",i);
 	CCEXP::SetVal<int>(DBG,"SetVal",0,2,-11);
 	CCEXP::SetVal<int>(DBG,"SetVal",0,4,-12);
-	__CCEXP_ERR_DISPLAY(DBG,-1);
+	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
 	
 	// Test "InitRowByScalar"
 	CCEXP::InitRowByScalar(DBG,"InitRowByScalar",-1,7,3);
 	CCEXP::InitRowByScalar(DBG,"InitRowByScalar",-1,7,4);
 	CCEXP::InitRowByScalar(DBG,"InitRowByScalar",0,3,2);
 	CCEXP::InitRowByScalar(DBG,"InitRowByScalar",-1,0,0);
-	__CCEXP_ERR_DISPLAY(DBG,-1);
+	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
 	
 	// Test "GetTableID"
 	size_t TableID;
 	CCEXP::getTableID(DBG,"AddVal", TableID);            CCEXP::AddVal(DBG,"getTableID",TableID);
 	CCEXP::getTableID(DBG,"DeleteLastElement", TableID); CCEXP::AddVal(DBG,"getTableID",TableID);
 	CCEXP::getTableID(DBG,"SetVal", TableID);            CCEXP::AddVal(DBG,"getTableID",TableID);
-	__CCEXP_ERR_DISPLAY(DBG,-1);
+	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
 
 	
 	// Test "getTableName"
@@ -165,7 +194,7 @@ int main(int argc, char **argv) {
 	
 	
 	
-	 __CCEXP_ERR_DISPLAY(DBG,-1);
+	 _DBG_ERROR_STOP_OR_CONTINUE_(DBG);
 	
 	// Store all DBG data. This will clear the data of all Tables,
 	// but will not remove the tables; you can re-add new data.

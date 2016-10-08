@@ -47,13 +47,26 @@ size_t CCEXP::getTableIndexByName(const char* Name) {
 	return sel;	
 }
 
+size_t CCEXP::checkDuplicatedNames(const char* Name) {
+	size_t cnt = 0;
+	for (size_t i = 0; i < M.size(); i++)
+		if ((M[i])->CompareName(Name) == 0) { cnt++; }
+	return cnt; // return how many times a Table name was found in the list.
+}
+
+void CCEXP::setStatus(int st) { Status = st; }
+	
+
 
 //@#: ############### CCEXP API Functions ###############
 int Initialize(CCEXP &obj, const char* fname, const char* Path, bool isactive) {
 	obj.Errors.clear();
 	obj.isActive = isactive;
 	if (!obj.isActive) return 0; // This is normal return, if the object is non-active. It's not an error.
-	if (obj.Status != CCEXPORTMAT_INIT) CCEXP_ERR(obj , ERROR::StatusNotInit , "Initialize():: CCEXP object with name [%s] has wrong status. Confirm you have reset it first." , fname );
+	int prevStatus = obj.Status;
+	obj.Status = CCEXPORTMAT_ACTIVE;
+	if (prevStatus != CCEXPORTMAT_INIT) CCEXP_ERR(obj , ERROR::StatusNotInit , "Initialize():: CCEXP object with name [%s] has wrong status. Confirm you have reset it first." , fname );
+	if (fname == NULL) CCEXP_ERR(obj, ERROR::IO_Error , "Initialize():: Export Filename is NULL!", 0);
 	if (Path == NULL) sprintf(obj.SavingFile,"%s",fname);
 	else sprintf(obj.SavingFile,"%s/%s", Path, fname);
 	obj.Status = CCEXPORTMAT_READY;
@@ -141,6 +154,7 @@ int NewLine(CCEXP &obj, const char *matname, int empty) {
 int Rows(CCEXP &obj, size_t sel, size_t &rows) {
 	if (!obj.isActive) return 0;
 	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "Rows():: CCEXP Table with ID [%lu] has wrong status." , (uint64_t)sel );
+	obj.Status = CCEXPORTMAT_ACTIVE;
 	if (sel < obj.M.size()) {
 		int ret = (obj.M[sel])->Rows(rows);
 		obj.Status = CCEXPORTMAT_READY;
@@ -160,6 +174,7 @@ int Rows(CCEXP &obj, const char* matname, size_t &rows) {
 int Cols(CCEXP &obj, size_t sel, size_t row, size_t &cols) {
 	if (!obj.isActive) return 0;
 	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "Cols():: CCEXP Table with ID [%lu] has wrong status." , (uint64_t)sel );
+	obj.Status = CCEXPORTMAT_ACTIVE;
 	if (sel < obj.M.size()) {
 		int ret = (obj.M[sel])->Cols(row, cols);
 		obj.Status = CCEXPORTMAT_READY;
@@ -178,6 +193,7 @@ int Cols(CCEXP &obj, const char* matname, size_t row, size_t &cols) {
 int DeleteLastRow(CCEXP &obj, size_t sel) {
 	if (!obj.isActive) return 0;
 	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "DeleteLastRow():: CCEXP Table with ID [%lu] has wrong status." , (uint64_t)sel );
+	obj.Status = CCEXPORTMAT_ACTIVE;
 	if (sel < obj.M.size()) {
 		int ret = (obj.M[sel])->DeleteLastRow();
 		obj.Status = CCEXPORTMAT_READY;
@@ -196,6 +212,7 @@ int DeleteLastRow(CCEXP &obj, const char* matname) {
 int DeleteRow(CCEXP &obj, size_t sel, size_t row) {
 	if (!obj.isActive) return 0;
 	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "DeleteRow():: CCEXP Table with ID [%lu] has wrong status." , (uint64_t)sel );
+	obj.Status = CCEXPORTMAT_ACTIVE;
 	if (sel < obj.M.size()) {
 		int ret = (obj.M[sel])->DeleteRow(row);
 		obj.Status = CCEXPORTMAT_READY;
@@ -215,6 +232,7 @@ int DeleteRow(CCEXP &obj, const char* matname, size_t row) {
 int DeleteLastElement(CCEXP &obj, size_t sel, size_t row) {
 	if (!obj.isActive) return 0;
 	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "DeleteLastElement():: CCEXP Table with ID [%lu] has wrong status." , (uint64_t)sel );
+	obj.Status = CCEXPORTMAT_ACTIVE;
 	if (sel < obj.M.size()) {
 		int ret = (obj.M[sel])->DeleteLastElement(row);
 		obj.Status = CCEXPORTMAT_READY;
@@ -263,11 +281,19 @@ int GetErrors(
 	vector<string>* &ptrError,
 	size_t &NumberOfErrors
 ) {
-	obj.Status = CCEXPORTMAT_ACTIVE;
+	// This function should not change CCEXP object status. Thus if a critical
+	// error occurs, then all the CCEXP object should be disabled (status errors
+	// for every call) denoting to the client that he must fix the error.
+	// Just for example-debugging reasons the function:
+	// CCEXP::DBG_SetStatus() can be used to change CCEXP status via force.
 	NumberOfErrors = obj.Errors.size();
 	ptrError = &(obj.Errors);
-	obj.Status = CCEXPORTMAT_READY;
 	return 0;
 }
+
+int DBG_SetStatus(CCEXP &obj, int status) {
+	obj.setStatus(status);
+}
+
 
 }; // namespace CCEXP;
