@@ -40,10 +40,10 @@ int main(int argc, char **argv) {
 				CCEXP::AddVal(DBG,"Table_i16",  (int16_t)(j*3+i+1000));
 				CCEXP::AddVal(DBG,"Table_st",   (size_t)(j*3+i+1));
 			}
-			CCEXP::NewLine(DBG,"Table_u8");
-			CCEXP::NewLine(DBG,"Table_float");
-			CCEXP::NewLine(DBG,"Table_i16");
-			CCEXP::NewLine(DBG,"Table_st");
+			CCEXP::NewRow(DBG,"Table_u8");
+			CCEXP::NewRow(DBG,"Table_float");
+			CCEXP::NewRow(DBG,"Table_i16");
+			CCEXP::NewRow(DBG,"Table_st");
 		}
 
 printf("\n\n**** TEST:: Error must occur at Line [%i]  *******",__LINE__+1);
@@ -122,21 +122,21 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	// Test if Tables are limited to new rows.
 		// Increase Rows of a loaded table. This should be ok!
 		for (int i = 0; i < 2; i++) {
-			CCEXP::NewLine(LD,"Table_u8");
+			CCEXP::NewRow(LD,"Table_u8");
 			CCEXP::AddVal(LD,"Table_u8", (uint8_t)(i));
 		}
 		_DBG_ERROR_STOP_OR_CONTINUE_(LD);
 	
 		// Increase Rows of a loaded table which is already limited to _maxRows!
 		for (int i = 0; i < 2; i++) {
-			CCEXP::NewLine(LD,"Table_float");
+			CCEXP::NewRow(LD,"Table_float");
 			CCEXP::AddVal(LD,"Table_float",(float)(i+0.5f));
 		}
 printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 		_DBG_ERROR_STOP_OR_CONTINUE_(LD);
 		
-	// Test NoNewRow(): It actually cancels the NewLine() operation.
-	CCEXP::NewLine(LD,"Table_st");
+	// Test NoNewRow(): It actually cancels the NewRow() operation.
+	CCEXP::NewRow(LD,"Table_st");
 	CCEXP::NoNewRow(LD,"Table_st");
 	CCEXP::AddVal(LD,"Table_st",999);
 	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
@@ -144,7 +144,7 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	// Display the Tables now in LD.
 	// * Table 'Table_u8' should have 12 rows
 	// * Table 'Table_float' should have 9 as it's limited in the file.
-	// * Table 'Table_st' should have 10 rows, as NoNewRow() cancelled the NewLine().
+	// * Table 'Table_st' should have 10 rows, as NoNewRow() cancelled the NewRow().
 	printf("\n\n");
 	for (size_t i = 0; i < NTables; i++) {
 		CCEXP::getTableName(LD, i, TableName);

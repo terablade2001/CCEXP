@@ -72,7 +72,7 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 
 		// Add 127 empty rows for float data, and then add the rest data normally.
 		if (row > 127) CCEXP::AddRow<float>(DBG,"T_F32",pF32,row);
-		else CCEXP::NewLine(DBG,"T_F32",1);		
+		else CCEXP::NewRow(DBG,"T_F32",1);
 	}
 	
 	// Until the below line, there should not be any error.
@@ -81,7 +81,7 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	 // Add 5 New Empty Lines to TestMaxR (ID=2).
 	 // Notice that Table with ID=2 (TestMaxR) is added with maximum Rows set
 	 // to 3 (by AddMatrix()). Thus errors should hit after 3 max lines.
-	for (int row = 0; row < 5; row++) CCEXP::NewLine(DBG,2,1);
+	for (int row = 0; row < 5; row++) CCEXP::NewRow(DBG,2,1);
 printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	_DBG_ERROR_STOP_OR_CONTINUE_(DBG); 
 	
@@ -118,10 +118,10 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	for (int j = 0; j < 3; j++)
 		for (int i = 0; i < 4; i++)
 			CCEXP::AddVal(DBG,"AddVal",j*4+i);
-	CCEXP::NewLine(DBG,"AddVal");
+	CCEXP::NewRow(DBG,"AddVal");
 	for (int i=0; i < 5; i++) CCEXP::AddVal(DBG,"AddVal",i);
 	
-	CCEXP::NewLine(DBG,"AddVal");
+	CCEXP::NewRow(DBG,"AddVal");
 	for (int i=0; i < 3; i++) CCEXP::AddVal(DBG,"AddVal",i);
 	CCEXP::DeleteLastRow(DBG,"AddVal");
 	for (int i=5; i < 8; i++) CCEXP::AddVal(DBG,"AddVal",i);
@@ -129,7 +129,7 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 
 	// Test "DeleteRow"
 	for (int i=0; i < 10; i++) {
-		CCEXP::AddVal(DBG,"DeleteRow",i); CCEXP::NewLine(DBG,"DeleteRow");
+		CCEXP::AddVal(DBG,"DeleteRow",i); CCEXP::NewRow(DBG,"DeleteRow");
 	}
 	CCEXP::DeleteRow(DBG,"DeleteRow",3);
 	CCEXP::DeleteRow(DBG,"DeleteRow",8);
@@ -138,7 +138,7 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	// Test "DeleteLastElement"
 	for (int j=0; j < 3; j++) {
 		for (int i=0; i < 5; i++) CCEXP::AddVal(DBG,"DeleteLastElement",i);
-		CCEXP::NewLine(DBG,"DeleteLastElement");
+		CCEXP::NewRow(DBG,"DeleteLastElement");
 	}
 	CCEXP::DeleteLastElement(DBG,"DeleteLastElement",1);
 	CCEXP::DeleteLastElement(DBG,"DeleteLastElement",1);
@@ -148,7 +148,7 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	// Test "AppendRow"
 	for (int j=0; j < 3; j++) {
 		for (int i=0; i < 5; i++) CCEXP::AddVal(DBG,"AppendRow",i);
-		CCEXP::NewLine(DBG,"AppendRow");
+		CCEXP::NewRow(DBG,"AppendRow");
 	}
 	int AppendRowData[3] = {21, 22, 23};
 	CCEXP::AppendRow<int>(DBG,"AppendRow",1,AppendRowData,3);
@@ -156,7 +156,7 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	// Test "ReplaceRow"
 	for (int j=0; j < 3; j++) {
 		for (int i=0; i < 5; i++) CCEXP::AddVal(DBG,"ReplaceRow",i);
-		CCEXP::NewLine(DBG,"ReplaceRow");
+		CCEXP::NewRow(DBG,"ReplaceRow");
 	}
 	int ReplaceRowData[3] = {31, 32, 33};
 	CCEXP::ReplaceRow<int>(DBG,"ReplaceRow",1,ReplaceRowData,3);

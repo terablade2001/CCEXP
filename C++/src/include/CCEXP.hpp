@@ -33,7 +33,7 @@
 #include <limits>
 #include <iostream>
 
-#define CCEXP_VERSION (0.021)
+#define CCEXP_VERSION (0.022)
 #define TRACK_ANALYTIC_ERRORS
 
 #ifndef __FNAME__
@@ -96,7 +96,7 @@ class CCEXPBase {
 	virtual int CompareName(const char* Name) = 0;
 	virtual bool getIgnoreStatus(void) = 0;
 	virtual int setIgnoreStatus(bool status) = 0;
-	virtual int NewLine(int empty) = 0;
+	virtual int NewRow(int empty) = 0;
 	virtual int NoNewRow(void) = 0;
 	virtual int Rows(size_t &rows) = 0;
 	virtual int Cols(size_t row, size_t &cols) = 0;
@@ -126,7 +126,7 @@ class CCEXPMat : public CCEXPBase {
 		int CompareName(const char* Name);
 		bool getIgnoreStatus(void);
 		int setIgnoreStatus(bool status);
-		int NewLine(int empty);
+		int NewRow(int empty);
 		int NoNewRow(void);
 		int Rows(size_t &rows);
 		int Cols(size_t row, size_t &cols);
@@ -142,7 +142,7 @@ class CCEXPMat : public CCEXPBase {
 		char name[64];
 		char type[64];
 		bool IgnoreM;
-		bool newLineFlag;
+		bool newRowFlag;
 		list<vector<T>> data;
 		size_t _maxRows;
 		CCEXP* __parent;
@@ -186,7 +186,7 @@ class CCEXP {
 
 
 //@#| ############### CCEXPBase Functions definitions ###############
-template<class T> CCEXPMat<T>::CCEXPMat() : IgnoreM(false), newLineFlag(true) { }
+template<class T> CCEXPMat<T>::CCEXPMat() : IgnoreM(false), newRowFlag(true) { }
 template<class T> CCEXPMat<T>::~CCEXPMat() { }
 
 
@@ -202,9 +202,9 @@ template<class T> int CCEXPMat<T>::Initialize(const char* Name, const char* type
 template<class T> int CCEXPMat<T>::AddValue(T val) {
 	if (IgnoreM) return 0; // This is not an error - We just ignore the Table...
 	const size_t N = data.size();
-	if ((N == 0) || (newLineFlag==true)) {
+	if ((N == 0) || (newRowFlag==true)) {
 		vector<T> dl; dl.clear(); data.push_back(dl);
-		newLineFlag = false;
+		newRowFlag = false;
 	}
 	data.back().push_back(val);
 	return 0;
@@ -217,7 +217,7 @@ template<class T> int CCEXPMat<T>::AddRow(T* ptr, size_t n) {
 	vector<T> dl; dl.resize(n);
 	memcpy(dl.data(), ptr, n * sizeof(T));
 	data.push_back(dl);
-	newLineFlag=true;
+	newRowFlag=true;
 	return 0;
 }
 
@@ -286,11 +286,11 @@ template<class T> int CCEXPMat<T>::setIgnoreStatus(bool status) { IgnoreM = stat
 
 
 
-template<class T> int CCEXPMat<T>::NewLine(int empty) {
+template<class T> int CCEXPMat<T>::NewRow(int empty) {
 	if (IgnoreM) return 0;
 	const size_t N = data.size();
-	if (N >= _maxRows) CCEXP_ERR(*__parent, ERROR::MaximumRowsReached , "CCEXPMat::NewLine():: Maximum Rows (%lu) already Reached!", (uint64_t)_maxRows);
-	newLineFlag=true;
+	if (N >= _maxRows) CCEXP_ERR(*__parent, ERROR::MaximumRowsReached , "CCEXPMat::NewRow():: Maximum Rows (%lu) already Reached!", (uint64_t)_maxRows);
+	newRowFlag=true;
 	if (empty == 1) {
 		vector<T> dl; dl.clear(); data.push_back(dl);
 	}
@@ -299,7 +299,7 @@ template<class T> int CCEXPMat<T>::NewLine(int empty) {
 
 template<class T> int CCEXPMat<T>::NoNewRow(void) {
 	if (IgnoreM) return 0;
-	newLineFlag=false;
+	newRowFlag=false;
 	return 0;
 }
 
@@ -371,7 +371,7 @@ template<class T> int CCEXPMat<T>::StoreData(FILE* fp) {
 
 
 template<class T> int CCEXPMat<T>::Reset(void) {
-	data.clear(); newLineFlag = true;
+	data.clear(); newRowFlag = true;
 	return 0;
 }
 
@@ -388,8 +388,8 @@ int StoreData(CCEXP &obj, const char* FName = NULL);
 int StoreIData(CCEXP &obj);
 int Open(CCEXP &obj, const char* filename);
 int Close(CCEXP &obj);
-int NewLine(CCEXP &obj, const char *matname, int empty = 0);
-int NewLine(CCEXP &obj, size_t sel, int empty = 0);
+int NewRow(CCEXP &obj, const char *matname, int empty = 0);
+int NewRow(CCEXP &obj, size_t sel, int empty = 0);
 int NoNewRow(CCEXP &obj, const char *matname);
 int NoNewRow(CCEXP &obj, size_t sel);
 int Rows(CCEXP &obj, const char* matname, size_t &rows);
@@ -545,7 +545,7 @@ template<class T> inline int LoadTable(CCEXP &obj, const char* name, const char*
 		ret = U->AddRow(rowData.data(), columns);
 		if (ret != 0) CCEXP_ERR(obj, ret, "LoadTable():: Internal error occured while copying Table's [%s], row [%lu] from an opened file!", name, (uint64_t)row);
 	}
-	// Warning: newLineFlag should be set to false, thus use to be able
+	// Warning: newRowFlag should be set to false, thus use to be able
 	// add data directly to the end of the last row if he want.
 	U->NoNewRow();
 

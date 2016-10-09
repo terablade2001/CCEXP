@@ -134,23 +134,23 @@ int StoreIData(CCEXP &obj) {
 
 
 
-int NewLine(CCEXP &obj, size_t sel, int empty) {
+int NewRow(CCEXP &obj, size_t sel, int empty) {
 	if (!obj.isActive) return 0;
-	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "NewLine():: CCEXP Table with ID [%lu] has wrong status." , (uint64_t)sel );
+	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "NewRow():: CCEXP Table with ID [%lu] has wrong status." , (uint64_t)sel );
 	obj.Status = CCEXPORTMAT_ACTIVE;
 	if (sel < obj.M.size()) {
-		int ret = (obj.M[sel])->NewLine(empty);
+		int ret = (obj.M[sel])->NewRow(empty);
 		obj.Status = CCEXPORTMAT_READY;
-		if (ret != 0) CCEXP_ERR(obj, ret, "NewLine():: Table with ID = %lu return error during call to NewLine()...", (uint64_t)sel);
+		if (ret != 0) CCEXP_ERR(obj, ret, "NewRow():: Table with ID = %lu return error during call to NewRow()...", (uint64_t)sel);
 		return 0;
 	}
 	obj.Status = CCEXPORTMAT_READY;
-	CCEXP_ERR(obj, ERROR::TableNotFound, "NewLine():: Table with ID = %lu was not found!...", (uint64_t)sel);
+	CCEXP_ERR(obj, ERROR::TableNotFound, "NewRow():: Table with ID = %lu was not found!...", (uint64_t)sel);
 }
-int NewLine(CCEXP &obj, const char *matname, int empty) {
+int NewRow(CCEXP &obj, const char *matname, int empty) {
 	size_t sel = obj.getTableIndexByName(matname);
-	if (sel == -1) CCEXP_ERR(obj, ERROR::TableNotFound, "NewLine():: Failed to find table with name [%s]!", matname);
-	return NewLine(obj, sel, empty); 
+	if (sel == -1) CCEXP_ERR(obj, ERROR::TableNotFound, "NewRow():: Failed to find table with name [%s]!", matname);
+	return NewRow(obj, sel, empty); 
 }
 
 
