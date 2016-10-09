@@ -13,7 +13,10 @@
 
 * Add Documentation to the code (doxygen based), thus users can understand it more easily.
 
-	
+STORING SYSTEM
+---
+* When storing a Table, store also MaxRows value.
+
 RECORDING SYSTEM
 ---	
 

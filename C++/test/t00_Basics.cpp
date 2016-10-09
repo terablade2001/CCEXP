@@ -9,10 +9,10 @@
 // #define ERROR_STOP
 #ifdef ERROR_STOP
 	#define _DBG_ERROR_STOP_OR_CONTINUE_(x) \
-		__CCEXP_ERR_DISPLAY(DBG,-1); if ((x).Status != 1) return (x).Status;
+		__CCEXP_ERR_DISPLAY((x),-1); if ((x).Status != 1) return (x).Status;
 #else	
 	#define _DBG_ERROR_STOP_OR_CONTINUE_(x) \
-		__CCEXP_ERR_DISPLAY(DBG,-1); CCEXP::DBG_SetStatus((x), 1);
+		__CCEXP_ERR_DISPLAY((x),-1); CCEXP::DBG_SetStatus((x), 1);
 #endif
 
 // Define a CCEXP object (DBG)

@@ -33,7 +33,7 @@
 #include <limits>
 #include <iostream>
 
-#define CCEXP_VERSION (0.018)
+#define CCEXP_VERSION (0.020)
 #define TRACK_ANALYTIC_ERRORS
 
 #ifndef __FNAME__
@@ -48,7 +48,7 @@
 
 #ifdef TRACK_ANALYTIC_ERRORS
 	#define CCEXP_ERR(obj, errid, str, args...) { \
-		char ccexp_errStr[512]={0}; sprintf(ccexp_errStr, str, args); \
+		char ccexp_errStr[2048]={0}; sprintf(ccexp_errStr, str, args); \
 		if ((obj).Errors.size() < 128) (obj).Errors.push_back(string(ccexp_errStr)); \
 		return errid; }
 
@@ -80,6 +80,7 @@ enum ERROR {
 	TableNotFound, /// When a table is not found...
 	TableHasNoRows, /// When a table has no rows, but it's requested to do something on a row.
 	DublicatedTable, /// When a table is added which has the same name with other table.
+	CCEXP_AlreadyClosed, /// When CCEXP::Close() is called to an alreaded closed file.
 	
     Other /// Any other error...
 };
@@ -150,11 +151,13 @@ class CCEXP {
 	public:
   
 	FILE* fp;
-	int TotalMatrices;
-	int LoadIndex;
 	int Status;
 	int STCounter;
 	bool isActive;
+	
+	FILE* lfp;
+	size_t LoadTotalTables;
+	size_t LoadTableIndex;
 	
 	vector<shared_ptr<CCEXPBase>> M;
 	char SavingFile[256];
@@ -376,6 +379,8 @@ template<class T> int CCEXPMat<T>::Reset(void) {
 int Initialize(CCEXP &obj, const char* fname, const char* Path = NULL, bool isactive = true);
 int StoreData(CCEXP &obj, const char* FName = NULL);
 int StoreIData(CCEXP &obj);
+int Open(CCEXP &obj, const char* filename);
+int Close(CCEXP &obj);
 int NewLine(CCEXP &obj, const char *matname, int empty = 0);
 int NewLine(CCEXP &obj, size_t sel, int empty = 0);
 int Rows(CCEXP &obj, const char* matname, size_t &rows);
@@ -392,6 +397,7 @@ int getTableID(CCEXP &obj, const char* matname, size_t &sel);
 int getTableName(CCEXP &obj, size_t sel, char* &matname);
 int Reset(CCEXP &obj);
 int GetErrors(CCEXP &obj, vector<string>* &ptrError, size_t &NumberOfErrors);
+size_t NumberOfTables(CCEXP &obj);
 int DBG_SetStatus(CCEXP &obj, int status);
 
 //@#: ############### Templates API Functions ###############
@@ -409,8 +415,8 @@ template<class T> inline int AddTable (
 	obj.M.push_back(shared_ptr<CCEXPBase>((CCEXPBase*) new CCEXPMat<T>));
 	CCEXPMat<T>* U = static_cast<CCEXPMat<T>*>(obj.M[obj.M.size()-1].get());
 	int ret = U->Initialize(matname, typeName, MaxRows, &obj);
-	obj.Status = CCEXPORTMAT_READY;
 	if (ret != 0) CCEXP_ERR(obj, ret, "AddTable():: Internal error occured during initialization() (error: %i)!", ret);
+	obj.Status = CCEXPORTMAT_READY;
 	return 0;
 }
 
@@ -429,10 +435,108 @@ template<class T> inline int AddTableI(
 	CCEXPMat<T>* U = static_cast<CCEXPMat<T>*>(obj.M[obj.M.size()-1].get());
 	int ret = U->Initialize(matname, typeName, MaxRows, &obj);	
 	int ret2 = U->setIgnoreStatus(true);
-	obj.Status = CCEXPORTMAT_READY;
 	if (ret != 0) CCEXP_ERR(obj, ret, "AddTable():: Internal error occured during initialization() (error: %i)!", ret);
 	if (ret2 != 0) CCEXP_ERR(obj, ret2, "AddTable():: Internal error occured during setIgnoreStatus() (error: %i)!", ret2);
+	obj.Status = CCEXPORTMAT_READY;
 	return 0;
+}
+
+template<class T> inline int LoadTable(CCEXP &obj, const char* name, const char* type) {
+	if (!obj.isActive) return 0;
+	int prevStatus = obj.Status;	
+	// If any error occurs, then it should be critical error!
+	obj.Status = CCEXPORTMAT_ACTIVE;	
+	if (obj.checkDuplicatedNames(name) > 0)
+		CCEXP_ERR(obj , ERROR::DublicatedTable , "LoadTable():: Table [%s] already exist in CCEXP object!", name);
+	if ((prevStatus != CCEXPORTMAT_INIT) && (prevStatus != CCEXPORTMAT_READY))
+		CCEXP_ERR(obj , ERROR::StatusIsWrong , "LoadTable():: CCEXP object has wrong status!", 0);
+	FILE* lfp = obj.lfp;
+	if (lfp == NULL) CCEXP_ERR(obj, ERROR::IO_Error, "LoadTable():: File pointer is NULL. Use CCEXP::Open() first!", 0);
+	char loadName[64]={0};
+	char loadType[64]={0};
+	size_t typeSize;
+	size_t N;
+	size_t LastTablePosByte;
+	
+	bool TableFound = false;
+	// Search from current LoadTableIndex to the Total Tables of files.
+	for (size_t i = obj.LoadTableIndex; i < obj.LoadTotalTables; i++) {
+		LastTablePosByte = ftell(lfp);
+		fread(loadName,sizeof(char),64,lfp);
+		fread(loadType,sizeof(char),64,lfp);
+		fread(&typeSize,sizeof(size_t),1,lfp);
+		fread(&N,sizeof(size_t),1,lfp);
+		if (strcmp(loadName,name)==0) {
+			TableFound = true; obj.LoadTableIndex = i+1; break;
+		}
+		vector<size_t> DPL; DPL.resize(N);
+		fread(DPL.data(), sizeof(size_t), N, lfp);
+		size_t TableBytes = 0;
+		for (size_t c = 0; c < N; c++)
+			TableBytes += DPL[c]*typeSize;
+		fseek(lfp, TableBytes, SEEK_CUR);
+	}
+	if (!TableFound) {
+		// If the Table has not been found in the file, search again from the start
+		fseek(lfp, sizeof(uint32_t) + sizeof(size_t), SEEK_SET);
+		
+		for (size_t i = 0; i < obj.LoadTableIndex; i++) {
+			LastTablePosByte = ftell(lfp);
+			fread(loadName,sizeof(char),64,lfp);
+			fread(loadType,sizeof(char),64,lfp);
+			fread(&typeSize,sizeof(size_t),1,lfp);
+			fread(&N,sizeof(size_t),1,lfp);
+			// TODO:: Load also MaxRows, to use them at U->Initialize
+			if (strcmp(loadName,name)==0) {
+				TableFound = true; obj.LoadTableIndex = i+1; break;
+			}
+			vector<size_t> DPL; DPL.resize(N);
+			fread(DPL.data(), sizeof(size_t), N, lfp);
+			size_t TableBytes = 0;
+			for (size_t c = 0; c < N; c++)
+				TableBytes += DPL[c]*typeSize;
+			fseek(lfp, TableBytes, SEEK_CUR);
+		}
+	}
+	
+	if (obj.LoadTableIndex >= obj.LoadTotalTables) obj.LoadTableIndex = 0;
+	
+	// If the Table hot not been found, then abort with error.
+	if(!TableFound) {
+		fseek(lfp, LastTablePosByte, SEEK_SET);
+		CCEXP_ERR(obj, ERROR::IO_Error, "LoadTable():: Failed to find table [%s] into the last opened file!", name);
+	}
+	
+	// At this point the table has been found, and we have to reload it!
+	if (strcmp(loadType, type) != 0) {
+		fseek(lfp, LastTablePosByte, SEEK_SET);
+		CCEXP_ERR(obj, ERROR::IO_Error, "LoadTable():: Table [%s] is of \"%s\" type, while requested LoadTable is of \"%s\" type!", name, loadType, type);
+	}
+	// TODO:: Check directly the given type (typeid(T).name()) with another
+	// section of ccexp files would be a solution, but some compilers does not
+	// support typeid(T).name() correctly. Would it there be any better solution?
+		// if (typeSize != sizeof(T)) CCEXP_ERR(obj, ERROR::IO_Error, "LoadTable():: Table [%s] is of %i byte data, while requested %i byte data!", typeSize, sizeof(T));
+	
+	// Create a new Table...
+	obj.M.push_back(shared_ptr<CCEXPBase>((CCEXPBase*) new CCEXPMat<T>));
+	CCEXPMat<T>* U = static_cast<CCEXPMat<T>*>(obj.M[obj.M.size()-1].get());
+	int ret = U->Initialize(loadName, loadType, 0, &obj);
+	if (ret != 0) CCEXP_ERR(obj, ret, "LoadTable():: Internal error occured while copying Table [%s] from an opened file!", name);
+	// Copy data from file to the new table.
+	vector<size_t> DPL; DPL.resize(N);
+	fread(DPL.data(), sizeof(size_t), N, lfp);
+	vector<T> rowData;
+	size_t maxCols=0;
+	for (size_t row = 0; row < N; row++) {
+		const size_t columns = DPL[row];
+		if (columns > maxCols) { maxCols = columns; rowData.resize(maxCols); }
+		fread(rowData.data(), sizeof(T), columns, lfp);
+		ret = U->AddRow(rowData.data(), columns);
+		if (ret != 0) CCEXP_ERR(obj, ret, "LoadTable():: Internal error occured while copying Table's [%s], row [%lu] from an opened file!", name, (uint64_t)row);
+	}
+
+	obj.Status = CCEXPORTMAT_READY;
+
 }
 
 template<class T> inline int AddRow(

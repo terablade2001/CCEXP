@@ -28,15 +28,18 @@ namespace CCEXP {
 CCEXP::CCEXP() :
 	Status(CCEXPORTMAT_INIT),
 	fp(NULL),
-	TotalMatrices(-1),
-	LoadIndex(0),
+	lfp(NULL),
 	STCounter(0),
+	LoadTotalTables(0),
+	LoadTableIndex(0),
 	isActive(true)
 { 
+	sprintf(SavingFile,"");
 	Errors.clear();
 }
 
 CCEXP::~CCEXP() {
+	if (lfp != NULL) fclose(lfp);
 	Status = CCEXPORTMAT_DIED;
 }
 
@@ -80,6 +83,7 @@ int StoreData(CCEXP &obj, const char* FName) {
 	if (!obj.isActive) return 0;
 	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "StoreData():: CCEXP object with filename [%s] has wrong status." , SelName );
 	obj.Status = CCEXPORTMAT_ACTIVE;
+	if (strcmp(SelName,"") == 0) CCEXP_ERR(obj , ERROR::StatusNotInit , "StoreData():: CCEXP object has no filename to store the data!",0);
 	FILE *fp;
 	fp = fopen(SelName,"wb");
 	
@@ -267,12 +271,15 @@ int getTableName(CCEXP &obj, size_t sel, char* &matname) {
 
 
 int Reset(CCEXP &obj) {
-	obj.Status = CCEXPORTMAT_INIT;
+	obj.Status = CCEXPORTMAT_ACTIVE;
 	obj.M.clear();
-	obj.TotalMatrices = -1;
-	obj.LoadIndex = 0;
-	obj.STCounter = 0;
-	obj.isActive = true;
+	if (obj.fp  != NULL) { fclose(obj.fp);  obj.fp  = NULL; }
+	if (obj.lfp != NULL) { fclose(obj.lfp); obj.lfp = NULL; }
+	obj.STCounter       = 0;
+	obj.isActive        = true;
+	obj.LoadTotalTables = 0;
+	obj.LoadTableIndex  = 0 ;
+	obj.Status = CCEXPORTMAT_INIT;
 	return 0;
 }
 
@@ -291,9 +298,45 @@ int GetErrors(
 	return 0;
 }
 
+size_t NumberOfTables(CCEXP &obj) {
+	return obj.M.size();
+}
+
 int DBG_SetStatus(CCEXP &obj, int status) {
 	obj.setStatus(status);
 }
 
+int Open(CCEXP &obj, const char* filename) {
+	if (!obj.isActive) obj.isActive = true;	// An Open() call always enable a CCEXP object.
+	if (filename == NULL) CCEXP_ERR(obj, ERROR::IO_Error , "Load():: Loading Filename is NULL!", 0);
+	if ((obj.Status != CCEXPORTMAT_INIT) && (obj.Status != CCEXPORTMAT_READY))
+		CCEXP_ERR(obj , ERROR::StatusIsWrong , "Open():: CCEXP object has wrong status!", 0);
+	if ((obj.SavingFile[0] == 0) && (obj.SavingFile[1] == 0))
+		CCEXP_ERR(obj , ERROR::StatusIsWrong , "Open():: CCEXP object must be initialized first!", 0);
+
+	obj.Status = CCEXPORTMAT_ACTIVE;
+		if (obj.lfp != NULL) fclose(obj.lfp);
+		
+		// Open the file but do not close it. CCEXP::Close() is for this job.
+		obj.lfp = fopen(filename,"rb");
+		FILE* lfp = obj.lfp;
+		if (lfp == NULL) CCEXP_ERR(obj , ERROR::IO_Error , "Open():: Failed to open for reading the file [%s]." , filename );		
+		uint32_t LoadSTBytes;
+		fread(&LoadSTBytes, sizeof(uint32_t), 1, lfp);
+		if (LoadSTBytes != sizeof(size_t)) 
+			CCEXP_ERR(obj , ERROR::IO_Error , "Open():: sizeof(size_t) is different than the one stored at the file [%s]." , filename );
+		fread(&obj.LoadTotalTables,sizeof(size_t),1,lfp);
+		obj.LoadTableIndex = 0;
+	obj.Status = CCEXPORTMAT_READY;
+	return 0;
+}
+
+
+
+int Close(CCEXP &obj) {
+	if (obj.lfp == NULL) CCEXP_ERR(obj , ERROR::CCEXP_AlreadyClosed , "Close():: Required file is alread closed ", 0 );
+	fclose(obj.lfp); obj.lfp = NULL;
+	return 0;
+}
 
 }; // namespace CCEXP;
