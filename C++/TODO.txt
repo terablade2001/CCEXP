@@ -1,33 +1,20 @@
-* Overload API functions to use the same name for named or ID-used access.
-
 * Update to thread-safe system
 	A CCEXP object should only change it's data when all previous modifications on it, have been finished. Otherwise it should produce error.
 	
-* Update Error return System
-	A) When an error is occurred a different value than -1 should be returned, with much more meaning!
-	B) Error Number explanation function should be considered.
-
 * Simplify code.
-	1. Remove multiple duplications (i.e. common Table-Search code in every method)
-	2. Make code more readable
+	1. Make code more readable
 
 * Add Documentation to the code (doxygen based), thus users can understand it more easily.
 
 STORING SYSTEM
----
-* When storing a Table, store also MaxRows value.
+----
 
 RECORDING SYSTEM
 ---	
 
 LOADING / READING SYSTEM
-		
-* Create the LOADing system
-
-* RowPtr
-	get the pointer of a row for direct data access.
+---
 	
-* Val
-	get the object/value in a specific row-column.
-
-	
+Non C++ code
+---
+1. Create ccexp export from MatLab and Python scripts (i.e. how to pass data from MatLab, Python etc to C++ via a .ccexp file)

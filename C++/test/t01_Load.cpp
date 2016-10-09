@@ -167,6 +167,31 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
 	
 	
+	// Test getRow(). Notice that we have 3+3+2 values:
+	// 3 when adding values for row 8 (DBG object)
+	// 3 when adding values for row 9. NewRow() failed due to _maxRows = 9, thus
+	//   the 3 data was add at the end of row 8. (DBG object)
+	// 2 data when later on at LD object I tried to add 2 new rows which also
+	//   failed due to the _maxRows = 9 restriction.
+	vector<float> fv;
+	CCEXP::getRow(LD,"Table_float",8,fv);
+	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
+	printf("\n\nTable_float, Row=8 values:\n >> ");
+	for (int i = 0; i < fv.size(); i++)	printf("%2.3f ",fv[i]);
+	printf("\n");
+	
+	// Test getVal(). 4rth value will not updated (as it does not exist)
+	// but an error will be occured.
+	float val=0.0f;
+	printf("\n\nTable_float, Row=0 values:\n >> ");
+	for (int i = 0; i < 4; i++) {
+		CCEXP::getVal(LD,"Table_float",0,(size_t)i, val);
+		printf("%2.3f ", val);
+	}
+	printf("\n");
+printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
+	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
+	
 	
 	printf("\n... Program End ...\n");
 	return 0;
