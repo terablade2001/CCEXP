@@ -17,6 +17,8 @@ STORING SYSTEM
 ---
 * When storing a Table, store also MaxRows value.
 
+* Rename NewLine to NewRow.
+
 RECORDING SYSTEM
 ---	
 

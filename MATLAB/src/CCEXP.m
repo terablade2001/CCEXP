@@ -52,8 +52,9 @@ function [r, d] = CCEXP(fname, logg)
 		
 		
 		r(i).typeSize = fread(fp,1,[size_t '=>' size_t]); % Get the bytes of the specific type.
-		
 		NumOfRows = fread(fp, 1, size_t); % Load the number of rows of the table
+		r(i).MaxRows = fread(fp,1,[size_t '=>' size_t]); % Get the number of Max Rows.
+
 		
 		DPL = fread(fp, NumOfRows(1), size_t); % Load the elements per row data of the table
 

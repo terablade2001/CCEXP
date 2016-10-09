@@ -33,7 +33,7 @@
 #include <limits>
 #include <iostream>
 
-#define CCEXP_VERSION (0.020)
+#define CCEXP_VERSION (0.021)
 #define TRACK_ANALYTIC_ERRORS
 
 #ifndef __FNAME__
@@ -97,6 +97,7 @@ class CCEXPBase {
 	virtual bool getIgnoreStatus(void) = 0;
 	virtual int setIgnoreStatus(bool status) = 0;
 	virtual int NewLine(int empty) = 0;
+	virtual int NoNewRow(void) = 0;
 	virtual int Rows(size_t &rows) = 0;
 	virtual int Cols(size_t row, size_t &cols) = 0;
 	virtual int DeleteLastRow(void) = 0;
@@ -126,6 +127,7 @@ class CCEXPMat : public CCEXPBase {
 		bool getIgnoreStatus(void);
 		int setIgnoreStatus(bool status);
 		int NewLine(int empty);
+		int NoNewRow(void);
 		int Rows(size_t &rows);
 		int Cols(size_t row, size_t &cols);
 		int DeleteLastRow(void);
@@ -200,7 +202,6 @@ template<class T> int CCEXPMat<T>::Initialize(const char* Name, const char* type
 template<class T> int CCEXPMat<T>::AddValue(T val) {
 	if (IgnoreM) return 0; // This is not an error - We just ignore the Table...
 	const size_t N = data.size();
-	// if (N >= _maxRows) return -1; // This is not need! data.size() should never be >= _maxRows.
 	if ((N == 0) || (newLineFlag==true)) {
 		vector<T> dl; dl.clear(); data.push_back(dl);
 		newLineFlag = false;
@@ -288,7 +289,7 @@ template<class T> int CCEXPMat<T>::setIgnoreStatus(bool status) { IgnoreM = stat
 template<class T> int CCEXPMat<T>::NewLine(int empty) {
 	if (IgnoreM) return 0;
 	const size_t N = data.size();
-	if (N >= _maxRows) CCEXP_ERR(*__parent, ERROR::MaximumRowsReached , "CCEXPMat::NewLine():: Maximum Rows Reached!", 0);
+	if (N >= _maxRows) CCEXP_ERR(*__parent, ERROR::MaximumRowsReached , "CCEXPMat::NewLine():: Maximum Rows (%lu) already Reached!", (uint64_t)_maxRows);
 	newLineFlag=true;
 	if (empty == 1) {
 		vector<T> dl; dl.clear(); data.push_back(dl);
@@ -296,6 +297,11 @@ template<class T> int CCEXPMat<T>::NewLine(int empty) {
 	return 0;
 }
 
+template<class T> int CCEXPMat<T>::NoNewRow(void) {
+	if (IgnoreM) return 0;
+	newLineFlag=false;
+	return 0;
+}
 
 template<class T> int CCEXPMat<T>::Rows(size_t &rows) {
 	if (IgnoreM) return 0;
@@ -351,6 +357,7 @@ template<class T> int CCEXPMat<T>::StoreData(FILE* fp) {
 	fwrite(type,sizeof(char),64,fp); /// Table, Type (string)
 	fwrite(&typeSize,sizeof(size_t),1,fp); /// Table, type size in Bytes
 	fwrite(&N,sizeof(size_t),1,fp); /// Table, number of rows
+	fwrite(&_maxRows,sizeof(size_t),1,fp); /// Maximum rows of the table.
 	if (N > 0) {
 		vector<size_t> DPL; DPL.resize(N);
 		int i = 0;
@@ -383,6 +390,8 @@ int Open(CCEXP &obj, const char* filename);
 int Close(CCEXP &obj);
 int NewLine(CCEXP &obj, const char *matname, int empty = 0);
 int NewLine(CCEXP &obj, size_t sel, int empty = 0);
+int NoNewRow(CCEXP &obj, const char *matname);
+int NoNewRow(CCEXP &obj, size_t sel);
 int Rows(CCEXP &obj, const char* matname, size_t &rows);
 int Rows(CCEXP &obj, size_t sel, size_t &rows);
 int Cols(CCEXP &obj, const char* matname, size_t row, size_t &cols);
@@ -457,6 +466,7 @@ template<class T> inline int LoadTable(CCEXP &obj, const char* name, const char*
 	size_t typeSize;
 	size_t N;
 	size_t LastTablePosByte;
+	size_t MaxRows=0;
 	
 	bool TableFound = false;
 	// Search from current LoadTableIndex to the Total Tables of files.
@@ -466,6 +476,7 @@ template<class T> inline int LoadTable(CCEXP &obj, const char* name, const char*
 		fread(loadType,sizeof(char),64,lfp);
 		fread(&typeSize,sizeof(size_t),1,lfp);
 		fread(&N,sizeof(size_t),1,lfp);
+		fread(&MaxRows,sizeof(size_t),1,lfp);
 		if (strcmp(loadName,name)==0) {
 			TableFound = true; obj.LoadTableIndex = i+1; break;
 		}
@@ -486,7 +497,7 @@ template<class T> inline int LoadTable(CCEXP &obj, const char* name, const char*
 			fread(loadType,sizeof(char),64,lfp);
 			fread(&typeSize,sizeof(size_t),1,lfp);
 			fread(&N,sizeof(size_t),1,lfp);
-			// TODO:: Load also MaxRows, to use them at U->Initialize
+			fread(&MaxRows,sizeof(size_t),1,lfp);
 			if (strcmp(loadName,name)==0) {
 				TableFound = true; obj.LoadTableIndex = i+1; break;
 			}
@@ -520,7 +531,7 @@ template<class T> inline int LoadTable(CCEXP &obj, const char* name, const char*
 	// Create a new Table...
 	obj.M.push_back(shared_ptr<CCEXPBase>((CCEXPBase*) new CCEXPMat<T>));
 	CCEXPMat<T>* U = static_cast<CCEXPMat<T>*>(obj.M[obj.M.size()-1].get());
-	int ret = U->Initialize(loadName, loadType, 0, &obj);
+	int ret = U->Initialize(loadName, loadType, MaxRows, &obj);
 	if (ret != 0) CCEXP_ERR(obj, ret, "LoadTable():: Internal error occured while copying Table [%s] from an opened file!", name);
 	// Copy data from file to the new table.
 	vector<size_t> DPL; DPL.resize(N);
@@ -534,6 +545,9 @@ template<class T> inline int LoadTable(CCEXP &obj, const char* name, const char*
 		ret = U->AddRow(rowData.data(), columns);
 		if (ret != 0) CCEXP_ERR(obj, ret, "LoadTable():: Internal error occured while copying Table's [%s], row [%lu] from an opened file!", name, (uint64_t)row);
 	}
+	// Warning: newLineFlag should be set to false, thus use to be able
+	// add data directly to the end of the last row if he want.
+	U->NoNewRow();
 
 	obj.Status = CCEXPORTMAT_READY;
 

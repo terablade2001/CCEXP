@@ -27,8 +27,8 @@ fprintf('d.AddVal{2} must have values: 0 to 7 .... \n');
 d.AddVal{2}
 
 fprintf('Checking AddVal() + DeleteRow(3)\n');
-fprintf('d.DeleteRow{1:9} must have values: 0,1,2,4,5,6,7,8 .... \n');
-d.DeleteRow{1:9}
+fprintf('d.DeleteRow{1:8} must have values: 0,1,2,4,5,6,7,8 .... \n');
+d.DeleteRow{1:8}
 
 fprintf('Checking DeleteLastElement(n)\n');
 fprintf('d.DeleteLastElement{2} must have values: 0,1 .... \n');

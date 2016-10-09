@@ -28,12 +28,12 @@ int main(int argc, char **argv) {
 			
 		// Add Tables
 		CCEXP::AddTable <uint8_t>(DBG,"Table_u8","uint8");
-		CCEXP::AddTable <float>(DBG,"Table_float","single");
+		CCEXP::AddTable <float>(DBG,"Table_float","single",9);
 		CCEXP::AddTable <int16_t>(DBG,"Table_i16","int16");
 		CCEXP::AddTable <size_t>(DBG,"Table_st","uint64");
 		_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
 		
-		for (int j=0; j < 10; j ++) {
+		for (int j=0; j < 10; j++) {
 			for (int i = 0; i < 3; i++) {
 				CCEXP::AddVal(DBG,"Table_u8",   (uint8_t)(j*3+i));
 				CCEXP::AddVal(DBG,"Table_float",(float)(j*3+i+0.5f));
@@ -45,7 +45,10 @@ int main(int argc, char **argv) {
 			CCEXP::NewLine(DBG,"Table_i16");
 			CCEXP::NewLine(DBG,"Table_st");
 		}
-				
+
+printf("\n\n**** TEST:: Error must occur at Line [%i]  *******",__LINE__+1);
+		_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+
 		CCEXP::StoreData(DBG);
 		CCEXP::Reset(DBG);
 		_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
@@ -114,6 +117,44 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	
 	NTables = CCEXP::NumberOfTables(LD);
 	printf("[%s: %i]: Tables in LD (Should be 5) : %lu\n",__FNAME__,__LINE__, NTables);
+	
+	
+	// Test if Tables are limited to new rows.
+		// Increase Rows of a loaded table. This should be ok!
+		for (int i = 0; i < 2; i++) {
+			CCEXP::NewLine(LD,"Table_u8");
+			CCEXP::AddVal(LD,"Table_u8", (uint8_t)(i));
+		}
+		_DBG_ERROR_STOP_OR_CONTINUE_(LD);
+	
+		// Increase Rows of a loaded table which is already limited to _maxRows!
+		for (int i = 0; i < 2; i++) {
+			CCEXP::NewLine(LD,"Table_float");
+			CCEXP::AddVal(LD,"Table_float",(float)(i+0.5f));
+		}
+printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
+		_DBG_ERROR_STOP_OR_CONTINUE_(LD);
+		
+	// Test NoNewRow(): It actually cancels the NewLine() operation.
+	CCEXP::NewLine(LD,"Table_st");
+	CCEXP::NoNewRow(LD,"Table_st");
+	CCEXP::AddVal(LD,"Table_st",999);
+	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
+	
+	// Display the Tables now in LD.
+	// * Table 'Table_u8' should have 12 rows
+	// * Table 'Table_float' should have 9 as it's limited in the file.
+	// * Table 'Table_st' should have 10 rows, as NoNewRow() cancelled the NewLine().
+	printf("\n\n");
+	for (size_t i = 0; i < NTables; i++) {
+		CCEXP::getTableName(LD, i, TableName);
+		CCEXP::Rows(LD,TableName,rows);
+		printf("[%s: %i]: Table %lu --> %s with (%lu)rows\n",__FNAME__,__LINE__, (uint64_t)i, TableName, (uint64_t)rows);
+	}
+	
+
+	
+	
 	
 	// Store the LD object. This would produce error if LD is not initialized!
 	CCEXP::StoreData(LD);

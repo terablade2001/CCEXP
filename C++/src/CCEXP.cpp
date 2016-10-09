@@ -154,6 +154,25 @@ int NewLine(CCEXP &obj, const char *matname, int empty) {
 }
 
 
+int NoNewRow(CCEXP &obj, size_t sel) {
+	if (!obj.isActive) return 0;
+	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR(obj , ERROR::StatusNotReady , "NoNewRow():: CCEXP Table with ID [%lu] has wrong status." , (uint64_t)sel );
+	obj.Status = CCEXPORTMAT_ACTIVE;
+	if (sel < obj.M.size()) {
+		int ret = (obj.M[sel])->NoNewRow();
+		obj.Status = CCEXPORTMAT_READY;
+		if (ret != 0) CCEXP_ERR(obj, ret, "NoNewRow():: Table with ID = %lu return error during call to NoNewRow()...", (uint64_t)sel);
+		return 0;
+	}
+	obj.Status = CCEXPORTMAT_READY;
+	CCEXP_ERR(obj, ERROR::TableNotFound, "NoNewRow():: Table with ID = %lu was not found!...", (uint64_t)sel);
+}
+int NoNewRow(CCEXP &obj, const char *matname) {
+	size_t sel = obj.getTableIndexByName(matname);
+	if (sel == -1) CCEXP_ERR(obj, ERROR::TableNotFound, "NoNewRow():: Failed to find table with name [%s]!", matname);
+	return NoNewRow(obj, sel); 
+}
+
 
 int Rows(CCEXP &obj, size_t sel, size_t &rows) {
 	if (!obj.isActive) return 0;
