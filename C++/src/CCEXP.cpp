@@ -140,8 +140,8 @@ int NewRow(CCEXP &obj, size_t sel, int empty) {
 	obj.Status = CCEXPORTMAT_ACTIVE;
 	if (sel < obj.M.size()) {
 		int ret = (obj.M[sel])->NewRow(empty);
-		obj.Status = CCEXPORTMAT_READY;
 		if (ret != 0) CCEXP_ERR(obj, ret, "NewRow():: Table with ID = %lu return error during call to NewRow()...", (uint64_t)sel);
+		obj.Status = CCEXPORTMAT_READY;
 		return 0;
 	}
 	obj.Status = CCEXPORTMAT_READY;
@@ -160,8 +160,8 @@ int NoNewRow(CCEXP &obj, size_t sel) {
 	obj.Status = CCEXPORTMAT_ACTIVE;
 	if (sel < obj.M.size()) {
 		int ret = (obj.M[sel])->NoNewRow();
-		obj.Status = CCEXPORTMAT_READY;
 		if (ret != 0) CCEXP_ERR(obj, ret, "NoNewRow():: Table with ID = %lu return error during call to NoNewRow()...", (uint64_t)sel);
+		obj.Status = CCEXPORTMAT_READY;
 		return 0;
 	}
 	obj.Status = CCEXPORTMAT_READY;
@@ -180,8 +180,8 @@ int Rows(CCEXP &obj, size_t sel, size_t &rows) {
 	obj.Status = CCEXPORTMAT_ACTIVE;
 	if (sel < obj.M.size()) {
 		int ret = (obj.M[sel])->Rows(rows);
-		obj.Status = CCEXPORTMAT_READY;
 		if (ret != 0) CCEXP_ERR(obj, ret, "Rows():: Table with ID = %lu return error during call to Rows()...", (uint64_t)sel);
+		obj.Status = CCEXPORTMAT_READY;
 		return 0;
 	}
 	obj.Status = CCEXPORTMAT_READY;
@@ -200,8 +200,8 @@ int Cols(CCEXP &obj, size_t sel, size_t row, size_t &cols) {
 	obj.Status = CCEXPORTMAT_ACTIVE;
 	if (sel < obj.M.size()) {
 		int ret = (obj.M[sel])->Cols(row, cols);
-		obj.Status = CCEXPORTMAT_READY;
 		if (ret != 0) CCEXP_ERR(obj, ret, "Cols():: Table with ID = %lu return error during call to Cols()...", (uint64_t)sel);
+		obj.Status = CCEXPORTMAT_READY;
 		return 0;
 	}
 	obj.Status = CCEXPORTMAT_READY;
@@ -219,8 +219,8 @@ int DeleteLastRow(CCEXP &obj, size_t sel) {
 	obj.Status = CCEXPORTMAT_ACTIVE;
 	if (sel < obj.M.size()) {
 		int ret = (obj.M[sel])->DeleteLastRow();
-		obj.Status = CCEXPORTMAT_READY;
 		if (ret != 0) CCEXP_ERR(obj, ret, "DeleteLastRow():: Table with ID = %lu return error during call to DeleteLastRow()...", (uint64_t)sel);
+		obj.Status = CCEXPORTMAT_READY;
 		return 0;
 	}
 	obj.Status = CCEXPORTMAT_READY;
@@ -238,8 +238,8 @@ int DeleteRow(CCEXP &obj, size_t sel, size_t row) {
 	obj.Status = CCEXPORTMAT_ACTIVE;
 	if (sel < obj.M.size()) {
 		int ret = (obj.M[sel])->DeleteRow(row);
-		obj.Status = CCEXPORTMAT_READY;
 		if (ret != 0) CCEXP_ERR(obj, ret, "DeleteRow():: Table with ID = %lu return error during call to DeleteRow()...", (uint64_t)sel);
+		obj.Status = CCEXPORTMAT_READY;
 		return 0;
 	}
 	obj.Status = CCEXPORTMAT_READY;
@@ -258,8 +258,8 @@ int DeleteLastElement(CCEXP &obj, size_t sel, size_t row) {
 	obj.Status = CCEXPORTMAT_ACTIVE;
 	if (sel < obj.M.size()) {
 		int ret = (obj.M[sel])->DeleteLastElement(row);
-		obj.Status = CCEXPORTMAT_READY;
 		if (ret != 0) CCEXP_ERR(obj, ret, "DeleteLastElement():: Table with ID = %lu return error during call to DeleteLastElement()...", (uint64_t)sel);
+		obj.Status = CCEXPORTMAT_READY;
 		return 0;
 	}
 	obj.Status = CCEXPORTMAT_READY;

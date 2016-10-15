@@ -58,6 +58,8 @@ def CCEXP(filename, flag):
 		typeSize = (struct.unpack('N', fin.read(ByteSize)))[0]
 		nElements = (struct.unpack('N', fin.read(ByteSize)))[0]
 		MaxRows = (struct.unpack('N', fin.read(ByteSize)))[0]
+		if (nElements > MaxRows):
+			nElements = MaxRows;
 		Table = CCCEXP()
 		Table.Name = name
 		Table.Type = type

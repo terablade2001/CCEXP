@@ -10,12 +10,10 @@
 #ifdef ERROR_STOP
 	#define _DBG_ERROR_STOP_OR_CONTINUE_(x) \
 		__CCEXP_ERR_DISPLAY((x),-1); if ((x).Status != 1) return (x).Status;
-#else	
+#else
 	#define _DBG_ERROR_STOP_OR_CONTINUE_(x) \
 		__CCEXP_ERR_DISPLAY((x),-1); CCEXP::DBG_SetStatus((x), 1);
 #endif
-
-// Define a CCEXP object (DBG)
 
 
 int main(int argc, char **argv) {
@@ -41,12 +39,17 @@ int main(int argc, char **argv) {
 				CCEXP::AddVal(DBG,"Table_st",   (size_t)(j*3+i+1));
 			}
 			CCEXP::NewRow(DBG,"Table_u8");
+
+			// Table_float has limiting rows to 9. More than 9 rows should occur an error
+			// When j == the table has already 9 rows ([0...8]).
+			// I use error checking thus the program to be able to continue.
 			CCEXP::NewRow(DBG,"Table_float");
+			if (j >= 8) printf("\n\n**** TEST:: Error must occur at Line [%i]  *******",__LINE__+1);
+			_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+			
 			CCEXP::NewRow(DBG,"Table_i16");
 			CCEXP::NewRow(DBG,"Table_st");
 		}
-
-printf("\n\n**** TEST:: Error must occur at Line [%i]  *******",__LINE__+1);
 		_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
 
 		CCEXP::StoreData(DBG);
@@ -130,11 +133,12 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 		// Increase Rows of a loaded table which is already limited to _maxRows!
 		for (int i = 0; i < 2; i++) {
 			CCEXP::NewRow(LD,"Table_float");
+printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
+			_DBG_ERROR_STOP_OR_CONTINUE_(LD);
 			CCEXP::AddVal(LD,"Table_float",(float)(i+0.5f));
 		}
-printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 		_DBG_ERROR_STOP_OR_CONTINUE_(LD);
-		
+
 	// Test NoNewRow(): It actually cancels the NewRow() operation.
 	CCEXP::NewRow(LD,"Table_st");
 	CCEXP::NoNewRow(LD,"Table_st");

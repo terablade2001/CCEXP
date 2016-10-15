@@ -23,43 +23,45 @@
 function [r, d] = CCEXP(fname, logg)
 	if (nargin == 1); logg = 0; end;
 	fp=fopen(fname,'rb');
-    if (fp == -1); error(['File: [' fname '] was not found!..']); end;
-	
+	if (fp == -1); error(['File: [' fname '] was not found!..']); end;
+
 	size_t_Bytes = fread(fp,1,'uint32'); % Read the Bytes of "size_t" at C++ code.
 	if (size_t_Bytes == 4); size_t = 'uint32'; end; % More options can be added / Changed.
 	if (size_t_Bytes == 8); size_t = 'uint64'; end; % More options can be added / Changed.
-	
+
 	N = fread(fp,1,size_t); % Read the number of tables in the cexp file.
-	
+
 	for i=1:N % For every table, load ...
-	
+
 		name = fread(fp,64,'char')'; % Name of the table
 		type = fread(fp,64,'char')'; % Data type of the table
 
 		% Check and convert data to strings.
-        if (sum(name(:)) == 0)
-            r(i).name = sprintf('NameNotFound_%i',i);
+		if (sum(name(:)) == 0)
+			r(i).name = sprintf('NameNotFound_%i',i);
 			error(['Name Not Found! >>: ' r(i).name]);
-        elseif (sum(type(:)) == 0)
+		elseif (sum(type(:)) == 0)
 			r(i).type = sprintf('TypeNotFound_%i',i);
 			error(['Type Not Found! >>: ' r(i).type]);
 		else
-            p=find(name == 0); name = name(1:p-1);
-            r(i).name = char(name);
-            p=find(type == 0); type = type(1:p-1);
+			p=find(name == 0); name = name(1:p(1)-1);
+			r(i).name = char(name);
+			p=find(type == 0); type = type(1:p(1)-1);
 			r(i).type = char(type);
-        end
-		
-		
+		end
+
+
 		r(i).typeSize = fread(fp,1,[size_t '=>' size_t]); % Get the bytes of the specific type.
 		NumOfRows = fread(fp, 1, size_t); % Load the number of rows of the table
 		r(i).MaxRows = fread(fp,1,[size_t '=>' size_t]); % Get the number of Max Rows.
 
-		
-		DPL = fread(fp, NumOfRows(1), size_t); % Load the elements per row data of the table
+		% Limit reading rows, by the number of MaxRows.
+		if (NumOfRows > r(i).MaxRows); NumOfRows = r(i).MaxRows; end;
+
+		DPL = fread(fp, NumOfRows, size_t); % Load the elements per row data of the table
 
 		TB = sum(DPL); % Calculate total elements of the table
-		
+
 		data = fread(fp, TB, [r(i).type '=>' r(i).type])'; % Load all the elements casted to the correct type.
 
 		% Update the r-Structure.
@@ -79,7 +81,7 @@ function [r, d] = CCEXP(fname, logg)
 	end
 	fclose(fp);
 
-	
+
 	% Log data out.
 	if (logg == 0)
 		fprintf('\n%s::>\n',fname);

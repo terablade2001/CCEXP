@@ -33,7 +33,7 @@
 #include <limits>
 #include <iostream>
 
-#define CCEXP_VERSION (0.023)
+#define CCEXP_VERSION (0.024)
 #define TRACK_ANALYTIC_ERRORS
 
 #ifndef __FNAME__
@@ -188,7 +188,7 @@ class CCEXP {
 
 
 //@#| ############### CCEXPBase Functions definitions ###############
-template<class T> CCEXPMat<T>::CCEXPMat() : IgnoreM(false), newRowFlag(true) { }
+template<class T> CCEXPMat<T>::CCEXPMat() : IgnoreM(false), newRowFlag(true), _maxRows(std::numeric_limits<size_t>::max()) { }
 template<class T> CCEXPMat<T>::~CCEXPMat() { }
 
 
@@ -366,6 +366,14 @@ template<class T> int CCEXPMat<T>::StoreData(FILE* fp) {
 	fwrite(&typeSize,sizeof(size_t),1,fp); /// Table, type size in Bytes
 	fwrite(&N,sizeof(size_t),1,fp); /// Table, number of rows
 	fwrite(&_maxRows,sizeof(size_t),1,fp); /// Maximum rows of the table.
+	if (N > _maxRows) N = _maxRows; /// Limit Rows ...
+	
+	if (data.size() > N)
+		CCEXP_ERR(*__parent, ERROR::ReqRowLargerThanInTable ,
+			"CCEXPMat::StoreData():: Table [%s] containing more Rows (%lu) than MaxRows (%lu)",
+			name, data.size(), _maxRows,
+		0);
+	
 	if (N > 0) {
 		vector<size_t> DPL; DPL.resize(N);
 		int i = 0;
@@ -460,9 +468,9 @@ template<class T> inline int AddTableI(
 
 template<class T> inline int LoadTable(CCEXP &obj, const char* name, const char* type) {
 	if (!obj.isActive) return 0;
-	int prevStatus = obj.Status;	
+	int prevStatus = obj.Status;
 	// If any error occurs, then it should be critical error!
-	obj.Status = CCEXPORTMAT_ACTIVE;	
+	obj.Status = CCEXPORTMAT_ACTIVE;
 	if (obj.checkDuplicatedNames(name) > 0)
 		CCEXP_ERR(obj , ERROR::DublicatedTable , "LoadTable():: Table [%s] already exist in CCEXP object!", name);
 	if ((prevStatus != CCEXPORTMAT_INIT) && (prevStatus != CCEXPORTMAT_READY))
@@ -475,7 +483,6 @@ template<class T> inline int LoadTable(CCEXP &obj, const char* name, const char*
 	size_t N;
 	size_t LastTablePosByte;
 	size_t MaxRows=0;
-	
 	bool TableFound = false;
 	// Search from current LoadTableIndex to the Total Tables of files.
 	for (size_t i = obj.LoadTableIndex; i < obj.LoadTotalTables; i++) {
@@ -485,6 +492,7 @@ template<class T> inline int LoadTable(CCEXP &obj, const char* name, const char*
 		fread(&typeSize,sizeof(size_t),1,lfp);
 		fread(&N,sizeof(size_t),1,lfp);
 		fread(&MaxRows,sizeof(size_t),1,lfp);
+		if (N > MaxRows) N = MaxRows;
 		if (strcmp(loadName,name)==0) {
 			TableFound = true; obj.LoadTableIndex = i+1; break;
 		}
@@ -506,6 +514,7 @@ template<class T> inline int LoadTable(CCEXP &obj, const char* name, const char*
 			fread(&typeSize,sizeof(size_t),1,lfp);
 			fread(&N,sizeof(size_t),1,lfp);
 			fread(&MaxRows,sizeof(size_t),1,lfp);
+			if (N > MaxRows) N = MaxRows;
 			if (strcmp(loadName,name)==0) {
 				TableFound = true; obj.LoadTableIndex = i+1; break;
 			}
@@ -531,11 +540,7 @@ template<class T> inline int LoadTable(CCEXP &obj, const char* name, const char*
 		fseek(lfp, LastTablePosByte, SEEK_SET);
 		CCEXP_ERR(obj, ERROR::IO_Error, "LoadTable():: Table [%s] is of \"%s\" type, while requested LoadTable is of \"%s\" type!", name, loadType, type);
 	}
-	// TODO:: Check directly the given type (typeid(T).name()) with another
-	// section of ccexp files would be a solution, but some compilers does not
-	// support typeid(T).name() correctly. Would it there be any better solution?
-		// if (typeSize != sizeof(T)) CCEXP_ERR(obj, ERROR::IO_Error, "LoadTable():: Table [%s] is of %i byte data, while requested %i byte data!", typeSize, sizeof(T));
-	
+
 	// Create a new Table...
 	obj.M.push_back(shared_ptr<CCEXPBase>((CCEXPBase*) new CCEXPMat<T>));
 	CCEXPMat<T>* U = static_cast<CCEXPMat<T>*>(obj.M[obj.M.size()-1].get());
