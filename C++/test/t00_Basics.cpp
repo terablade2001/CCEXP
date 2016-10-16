@@ -86,12 +86,12 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	_DBG_ERROR_STOP_OR_CONTINUE_(DBG); 
 	
 	
-	size_t R0; CCEXP::Rows(DBG, "T_U8", R0);
+	size_t R0 = CCEXP::Rows(DBG, "T_U8");
 	printf("\nTable T_U8 has [%lu] rows\n", (uint64_t)R0);
 	
 		
 	size_t SelRow = 255;
-	size_t C0; CCEXP::Cols(DBG, "T_U8", SelRow, C0);
+	size_t C0 = CCEXP::Cols(DBG, "T_U8", SelRow);
 	printf("\nRow [%lu] of Table T_U8 has [%lu] columns\n", SelRow, (size_t)C0);
 	
 	// After TestMaxR table, no more errors should exist in the following test.
@@ -101,12 +101,12 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	
 	// Test Cols Error handling... (Wrong SelRow)
 	// Error must occur in the following call.
-		SelRow = 512; CCEXP::Cols(DBG, "T_U8", SelRow, C0);
+		SelRow = 512; C0 = CCEXP::Cols(DBG, "T_U8", SelRow);
 printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 		_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
 	
 	// Test Rows Error handling (False Table Name)
-	SelRow = 512; CCEXP::Cols(DBG, "T_UU88", SelRow, C0);
+	SelRow = 512; C0 = CCEXP::Cols(DBG, "T_UU88", SelRow);
 printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
 	
@@ -176,25 +176,25 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	
 	// Test "GetTableID"
 	size_t TableID;
-	CCEXP::getTableID(DBG,"AddVal", TableID);            CCEXP::AddVal(DBG,"getTableID",TableID);
-	CCEXP::getTableID(DBG,"DeleteLastElement", TableID); CCEXP::AddVal(DBG,"getTableID",TableID);
-	CCEXP::getTableID(DBG,"SetVal", TableID);            CCEXP::AddVal(DBG,"getTableID",TableID);
+	TableID = CCEXP::getTableID(DBG,"AddVal");            CCEXP::AddVal(DBG,"getTableID",TableID);
+	TableID = CCEXP::getTableID(DBG,"DeleteLastElement"); CCEXP::AddVal(DBG,"getTableID",TableID);
+	TableID = CCEXP::getTableID(DBG,"SetVal");            CCEXP::AddVal(DBG,"getTableID",TableID);
 	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
 
 	
 	// Test "getTableName"
 	printf("\n\n");
 	char* TableName = NULL;
-	CCEXP::getTableName(DBG,3,TableName);
+	TableName = CCEXP::getTableName(DBG,3);
 	printf("Table Name of Table with ID (%lu) is: %s\n", (uint64_t)3, TableName);
-	CCEXP::getTableName(DBG,5,TableName);
+	TableName = CCEXP::getTableName(DBG,5);
 	printf("Table Name of Table with ID (%lu) is: %s\n", (uint64_t)5, TableName);
-	CCEXP::getTableName(DBG,8,TableName);
+	TableName = CCEXP::getTableName(DBG,8);
 	printf("Table Name of Table with ID (%lu) is: %s\n", (uint64_t)8, TableName);
 	
 	
 	
-	 _DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
 	
 	// Store all DBG data. This will clear the data of all Tables,
 	// but will not remove the tables; you can re-add new data.

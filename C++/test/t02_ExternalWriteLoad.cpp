@@ -24,10 +24,9 @@ int main(int argc, char **argv) {
 		CCEXP::LoadTable<uint8_t>(LD,"Table_2","uint8");
 	CCEXP::Close(LD);
 	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
-	
-	size_t Rows_1 = 0, Rows_2 = 0;
-	CCEXP::Rows(LD, "Table_1", Rows_1);
-	CCEXP::Rows(LD, "Table_2", Rows_2);
+
+	size_t Rows_1 = CCEXP::Rows(LD, "Table_1");
+	size_t Rows_2 = CCEXP::Rows(LD, "Table_2");
 	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
 	
 	cout << endl << "Table_1 has [" << Rows_1 <<
@@ -36,10 +35,10 @@ int main(int argc, char **argv) {
 	
 	// Print Table_1 data ...
 	for (size_t r = 0; r < Rows_1; r++) {
-		size_t col; CCEXP::Cols(LD, "Table_1", r, col);
+		size_t col = CCEXP::Cols(LD, "Table_1", r);
 		cout << "Table_1, row(" << r << ") = [";
 		for (size_t c = 0; c < col; c++) {
-			float v1; CCEXP::getVal<float>(LD, "Table_1", r, c, v1);
+			float& v1 = CCEXP::getVal<float>(LD, "Table_1", r, c);
 			cout << v1 << " ";
 		}
 		cout << "]" << endl;
@@ -49,10 +48,10 @@ int main(int argc, char **argv) {
 	
 	// Print Table_2 data ...
 	for (size_t r = 0; r < Rows_2; r++) {
-		size_t col; CCEXP::Cols(LD, "Table_2", r, col);
+		size_t col = CCEXP::Cols(LD, "Table_2", r);
 		cout << "Table_2, row(" << r << ") = [";
 		for (size_t c = 0; c < col; c++) {
-			uint8_t v1; CCEXP::getVal<uint8_t>(LD, "Table_2", r, c, v1);
+			uint8_t& v1 = CCEXP::getVal<uint8_t>(LD, "Table_2", r, c);
 			printf("%u ", v1);
 		}
 		cout << "]" << endl;
