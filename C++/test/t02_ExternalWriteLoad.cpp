@@ -18,7 +18,8 @@
 int main(int argc, char **argv) {
 	// Load a Binary file which created with external software (i.e. Python, MatLab(Octave) etc)
 	CCEXP::CCEXP LD;
-	
+    
+	CCEXP::Initialize(LD,"nofile.ccexp");
 	CCEXP::Open(LD,"SharedData.ccexp");
 		CCEXP::LoadTable<float>(LD,"Table_1","single");
 		CCEXP::LoadTable<uint8_t>(LD,"Table_2","uint8");
@@ -38,8 +39,9 @@ int main(int argc, char **argv) {
 		size_t col = CCEXP::Cols(LD, "Table_1", r);
 		cout << "Table_1, row(" << r << ") = [";
 		for (size_t c = 0; c < col; c++) {
-			float& v1 = CCEXP::getVal<float>(LD, "Table_1", r, c);
-			cout << v1 << " ";
+			float* v1 = CCEXP::getVal<float>(LD, "Table_1", r, c);
+            if (v1 != NULL) cout << *v1 << " ";
+            else cout << "v1=NULL" << " ";
 		}
 		cout << "]" << endl;
 	}
@@ -51,8 +53,9 @@ int main(int argc, char **argv) {
 		size_t col = CCEXP::Cols(LD, "Table_2", r);
 		cout << "Table_2, row(" << r << ") = [";
 		for (size_t c = 0; c < col; c++) {
-			uint8_t& v1 = CCEXP::getVal<uint8_t>(LD, "Table_2", r, c);
-			printf("%u ", v1);
+			uint8_t* v1 = CCEXP::getVal<uint8_t>(LD, "Table_2", r, c);
+			if (v1 != NULL) printf("%u ", *v1);
+            else printf("v1=NULL ");
 		}
 		cout << "]" << endl;
 	}

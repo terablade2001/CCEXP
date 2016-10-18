@@ -2,7 +2,7 @@
 
 ## What is CCEXP ?
 
-CCEXP (Class C EXPort) is a library in C++, based on templates and standard C++ libraries and functions, for organized data extraction and sharing between C++ code and other software (i.e. MatLab/Octave, Python etc). The sharing is currently done via files, which can store large amount of data.
+CCEXP (Class C EXPort) is a library in C++, based on templates and standard C/C++ libraries and functions, for organized data extraction and sharing between C++ code and other software (i.e. MatLab/Octave, Python etc). The sharing is currently done via files, which can store large amount of data.
 
 ## Why should I use CCEXP ?
 
@@ -13,7 +13,7 @@ CCEXP (Class C EXPort) is a library in C++, based on templates and standard C++ 
 You make a piece of code and need to export different runtime values and data that are going to be analyzed in another software (i.e. MatLab/Octave, Python etc). Instead of writing down your own code using fopen/fstream etc, you can just include the CCEXP.hpp and CCEXP.cpp files in your project and use them, for exporting multiple different types of data in an organized form.
 
 An example:
-```
+```C++
 #include "CCEXP.hpp"
 ...
 // Initialize an CCEXP object and add your Tables...
@@ -40,7 +40,7 @@ CCEXP::Reset(FileA);
 ```
 
 At MatLab/Octave you can read and check if everything is ok, as:
-```
+```Octave
 [~,d]=CCEXP('FileNameA');
 N=1;
 % Get Nth Image
@@ -52,7 +52,7 @@ testCoeffs = d.Resulted_Coeffs{N};
 And what if you need to stop exporting the 'Image' table (because the camera's
 data are ok, and you don't need anymore those data)?... With CCEXP you can
 ignore or not easily each Table:
-```
+```C++
 // Just add an 'I' (I-gnore) at the AddTable function, and the table will be
 // completely ignored. If need again to enable data of this table, remove the
 // 'I' from the name. An easy way to enable/disable export data without messing
@@ -65,7 +65,7 @@ CCEXP is a very good tool, if you need to exchange exported data from C++ to ano
 
 Below an analytical example of data sharing from a MatLab/Octave script is given, following by an example of C++ data import to a program.
 
-```
+```Octave
 clear all; close all; clc;
 
 % ################ PART #1 #####################################################
@@ -115,11 +115,12 @@ CCEXP_WRITE('SharedData.ccexp',CCEXPData);
 ```
 
 The "SharedData.ccexp" file can now be shared with a C++ program and loaded as follows:
-```
+```C++
 #include "CCEXP.hpp"
 ...
 // Define a CCEXP object, open the data file and load any wanted table.
 CCEXP::CCEXP LD;
+CCEXP::Initialize(LD,"nofile");
 CCEXP::Open(LD,"SharedData.ccexp");
 	CCEXP::LoadTable<float>(LD,"Table_1","single");
 	CCEXP::LoadTable<uint8_t>(LD,"Table_2","uint8");
@@ -128,8 +129,8 @@ CCEXP::Close(LD);
 // Then you can access elements like this:
 for (size_t r = 0; r < CCEXP::Rows(LD, "Table_2"); r++) {
 	for (size_t c = 0; c < CCEXP::Cols(LD, "Table_2", r); c++) {
-		uint8_t& v1 = CCEXP::getVal<uint8_t>(LD, "Table_2", r, c);
-		printf("%u ", v1);
+		uint8_t* v1 = CCEXP::getVal<uint8_t>(LD, "Table_2", r, c);
+		if (v1 != NULL) printf("%u ", v1);
 	}
 }
 ```

@@ -87,12 +87,12 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	
 	
 	size_t R0 = CCEXP::Rows(DBG, "T_U8");
-	printf("\nTable T_U8 has [%lu] rows\n", (uint64_t)R0);
+	printf("\nTable T_U8 has [%zu] rows\n", R0);
 	
 		
 	size_t SelRow = 255;
 	size_t C0 = CCEXP::Cols(DBG, "T_U8", SelRow);
-	printf("\nRow [%lu] of Table T_U8 has [%lu] columns\n", SelRow, (size_t)C0);
+	printf("\nRow [%zu] of Table T_U8 has [%zu] columns\n", SelRow, (size_t)C0);
 	
 	// After TestMaxR table, no more errors should exist in the following test.
 	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
@@ -186,11 +186,11 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	printf("\n\n");
 	char* TableName = NULL;
 	TableName = CCEXP::getTableName(DBG,3);
-	printf("Table Name of Table with ID (%lu) is: %s\n", (uint64_t)3, TableName);
+	printf("Table Name of Table with ID (%i) is: %s\n", 3, TableName);
 	TableName = CCEXP::getTableName(DBG,5);
-	printf("Table Name of Table with ID (%lu) is: %s\n", (uint64_t)5, TableName);
+	printf("Table Name of Table with ID (%i) is: %s\n", 5, TableName);
 	TableName = CCEXP::getTableName(DBG,8);
-	printf("Table Name of Table with ID (%lu) is: %s\n", (uint64_t)8, TableName);
+	printf("Table Name of Table with ID (%i) is: %s\n", 8, TableName);
 	
 	
 	

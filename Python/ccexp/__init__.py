@@ -39,7 +39,7 @@ def CCEXP(filename, flag):
 		"double" : "d",
 		"size_t" : "N"
 	}
-	d=[]
+	d={};
 
 	class CCCEXP: 
 		Name=[]
@@ -53,7 +53,7 @@ def CCEXP(filename, flag):
 	
 	for x in range(NTables):
 		name = (fin.read(64).decode('utf-8')).replace(str("\0"), "")
-		type = (fin.read(64).decode('utf-8')).replace(str("\0"), "")		
+		type = (fin.read(64).decode('utf-8')).replace(str("\0"), "")
 		PyType = PyTypes[type]
 		typeSize = (struct.unpack('N', fin.read(ByteSize)))[0]
 		nElements = (struct.unpack('N', fin.read(ByteSize)))[0]
@@ -72,18 +72,20 @@ def CCEXP(filename, flag):
 			for el in elit:
 				row.append(el[0])
 			Table.Data.append(row)
-		d.append(Table)	
+		d[Table.Name] = Table;
 
 	fin.close()
 
 	if (flag == 1):
 		N = len(d)
-		print("Arrays: %i" % (N))
+		print("Tables: %i" % (N))
+		Keys = list(d.keys());
 		for x in range(N):
-			rows = len(d[x].Data)
+			k = Keys[x];
+			rows = len(d[k].Data)
 			if rows == 1:
-				print("%i: %s (%s) -> [1 row x %i elements]" % (x, d[x].Name, d[x].Type, len(d[x].Data[0])))
+				print("%i: %s (%s) -> [1 row x %i elements]" % (x, d[k].Name, d[k].Type, len(d[k].Data[0])))
 			else:
-				print("%i: %s (%s) -> [%i rows]" % (x, d[x].Name, d[x].Type, rows))
+				print("%i: %s (%s) -> [%i rows]" % (x, d[k].Name, d[k].Type, rows))
 		
 	return d

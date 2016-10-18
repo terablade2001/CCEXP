@@ -62,8 +62,10 @@ int main(int argc, char **argv) {
 		
 		// If the CCEXP LD is not initialized, then it won't be able to
 		// store the data.
+
 		// *** All CCEXP object should be initialized first!
-		// CCEXP::Initialize(LD,"Output.bdat");
+		CCEXP::Initialize(LD,"Output.bdat");
+		// Ignoring the initialization, will yield a lot of errors!
 		
 		CCEXP::Open(LD,"DataFile.ccexp");
 			CCEXP::LoadTable<uint8_t>(LD,"Table_u8","uint8");
@@ -89,13 +91,13 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 		_DBG_ERROR_STOP_OR_CONTINUE_(LD);
 		
 		size_t NTables = CCEXP::NumberOfTables(LD);
-		size_t cols, rows;
+		size_t rows;
 		char* TableName;
-		printf("\n\n[%s: %i]: Tables in LD (Should be 2) : %lu\n",__FNAME__,__LINE__, NTables);
+		printf("\n\n[%s: %i]: Tables in LD (Should be 2) : %zu\n",__FNAME__,__LINE__, NTables);
 		for (size_t i = 0; i < NTables; i++) {
 			TableName = CCEXP::getTableName(LD, i);
 			rows = CCEXP::Rows(LD,TableName);
-			printf("[%s: %i]: Table %lu --> %s with (%lu)rows\n",__FNAME__,__LINE__, (uint64_t)i, TableName, (uint64_t)rows);
+			printf("[%s: %i]: Table %zu --> %s with (%zu)rows\n",__FNAME__,__LINE__, i, TableName, rows);
 		}
 	//}
 	
@@ -106,7 +108,7 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 		CCEXP::AddTable<int>(LD,"A_New_Table","int32");
 		for (int i = 0; i < 5; i++) CCEXP::AddVal(LD,"A_New_Table",i); 
 		NTables = CCEXP::NumberOfTables(LD);
-		printf("[%s: %i]: Tables in LD (Should be 3) : %lu\n",__FNAME__,__LINE__, NTables);
+		printf("[%s: %i]: Tables in LD (Should be 3) : %zu\n",__FNAME__,__LINE__, NTables);
 	
 	
 	// Load the rest tables at LD.
@@ -119,7 +121,7 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
 	
 	NTables = CCEXP::NumberOfTables(LD);
-	printf("[%s: %i]: Tables in LD (Should be 5) : %lu\n",__FNAME__,__LINE__, NTables);
+	printf("[%s: %i]: Tables in LD (Should be 5) : %zu\n",__FNAME__,__LINE__, NTables);
 	
 	
 	// Test if Tables are limited to new rows.
@@ -153,19 +155,12 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	for (size_t i = 0; i < NTables; i++) {
 		TableName = CCEXP::getTableName(LD, i);
 		rows = CCEXP::Rows(LD,TableName);
-		printf("[%s: %i]: Table %lu --> %s with (%lu)rows\n",__FNAME__,__LINE__, (uint64_t)i, TableName, (uint64_t)rows);
+		printf("[%s: %i]: Table %zu --> %s with (%zu)rows\n",__FNAME__,__LINE__, i, TableName, rows);
 	}
 	
 
 	
 	
-	
-	// Store the LD object. This would produce error if LD is not initialized!
-	printf("[%s: %i]: ErrorId should be 0: %i\n",__FNAME__,__LINE__, LD.ErrorId);
-	CCEXP::StoreData(LD);
-	printf("[%s: %i]: ErrorId should be NOT 0: %i\n",__FNAME__,__LINE__, LD.ErrorId);
-printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
-	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
 	
 	// If the LD object has not been initialized, an on-runtime name can be
 	// given to store there directly. This approach however is not recommended.
@@ -179,19 +174,21 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	//   the 3 data was add at the end of row 8. (DBG object)
 	// 2 data when later on at LD object I tried to add 2 new rows which also
 	//   failed due to the _maxRows = 9 restriction.
-	vector<float>& fv = CCEXP::getRow<float>(LD,"Table_float",8);
+	vector<float>* fv = CCEXP::getRow<float>(LD,"Table_float",8);
 	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
-	printf("\n\nTable_float, Row=8 values:\n >> ");
-	for (int i = 0; i < fv.size(); i++)	printf("%2.3f ",fv[i]);
-	printf("\n");
+	if (fv != NULL) {
+		printf("\n\nTable_float, Row=8 values:\n >> ");
+		for (size_t i = 0; i < fv->size(); i++)	printf("%2.3f ",(*fv)[i]);
+		printf("\n");
+	} else printf("[%s: %i]: ERROR:: fv = NULL!\n",__FNAME__,__LINE__);
 	
 	// Test getVal(). 4rth value will not updated (as it does not exist)
 	// but an error will be occured.
-	float val=0.0f;
 	printf("\n\nTable_float, Row=0 values:\n >> ");
-	for (int i = 0; i < 4; i++) {
-		float& val = CCEXP::getVal<float>(LD,"Table_float",0,(size_t)i);
-		printf("%2.3f ", val);
+	for (size_t i = 0; i < 4; i++) {
+		float* val = CCEXP::getVal<float>(LD,"Table_float",0, i);
+		if (val != NULL) printf("%2.3f ", *val);
+		else printf("val=NULL ");
 	}
 	printf("\n");
 printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
