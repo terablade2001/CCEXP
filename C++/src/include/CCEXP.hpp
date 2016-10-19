@@ -33,7 +33,7 @@
 #include <limits>
 #include <iostream>
 
-#define CCEXP_VERSION (0.055)
+#define CCEXP_VERSION (0.056)
 #define TRACK_ANALYTIC_ERRORS
 
 #ifndef __FNAME__
@@ -182,6 +182,7 @@ class CCEXP {
 	vector<string> Errors;
 
 	CCEXP();
+	CCEXP(const char* fname);
 	~CCEXP();
 	
 	size_t getTableIndexByName(const char* Name);

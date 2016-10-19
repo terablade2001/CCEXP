@@ -40,6 +40,10 @@ CCEXP::CCEXP() :
 	Errors.clear();
 }
 
+CCEXP::CCEXP(const char* fname) {
+	Initialize(*this, fname);
+}
+
 CCEXP::~CCEXP() {
 	if (lfp != NULL) fclose(lfp);
 	Status = CCEXPORTMAT_DIED;
@@ -355,9 +359,8 @@ void Open(CCEXP &obj, const char* filename) {
 	if (filename == NULL) CCEXP_ERR_V(obj, ERROR::IO_Error , "Load():: Loading Filename is NULL! (!%u!)", 0);
 	if ((obj.Status != CCEXPORTMAT_INIT) && (obj.Status != CCEXPORTMAT_READY))
 		CCEXP_ERR_V(obj , ERROR::StatusIsWrong , "Open():: CCEXP object has wrong status! (!%u!)", 0);
-	if ((obj.SavingFile[0] == 0) && (obj.SavingFile[1] == 0))
-		CCEXP_ERR_V(obj , ERROR::StatusIsWrong , "Open():: CCEXP object must be initialized first! (!%u!)", 0);
-
+	if ((obj.SavingFile[0] == 0) && (obj.SavingFile[1] == 0)) Initialize(obj, filename);
+	
 	obj.Status = CCEXPORTMAT_ACTIVE;
 		if (obj.lfp != NULL) fclose(obj.lfp);
 		

@@ -19,9 +19,10 @@
 int main(int argc, char **argv) {
 	// 1. Create a file
 	//{ >>>>>>>:: Create a file and store it ::<<<<<<<
-		CCEXP::CCEXP DBG;
-		CCEXP::Initialize(DBG,"DataFile.ccexp");
-		_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+        CCEXP::CCEXP DBG("DataFile.ccexp");
+		// CCEXP::CCEXP DBG;
+		// CCEXP::Initialize(DBG,"DataFile.ccexp");
+		
 		
 			
 		// Add Tables

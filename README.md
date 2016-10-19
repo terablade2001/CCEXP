@@ -120,7 +120,7 @@ The "SharedData.ccexp" file can now be shared with a C++ program and loaded as f
 ...
 // Define a CCEXP object, open the data file and load any wanted table.
 CCEXP::CCEXP LD;
-CCEXP::Initialize(LD,"nofile");
+
 CCEXP::Open(LD,"SharedData.ccexp");
 	CCEXP::LoadTable<float>(LD,"Table_1","single");
 	CCEXP::LoadTable<uint8_t>(LD,"Table_2","uint8");

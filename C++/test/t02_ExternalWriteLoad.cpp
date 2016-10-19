@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
 	// Load a Binary file which created with external software (i.e. Python, MatLab(Octave) etc)
 	CCEXP::CCEXP LD;
     
-	CCEXP::Initialize(LD,"nofile.ccexp");
+	// CCEXP::Initialize(LD,"nofile.ccexp");
 	CCEXP::Open(LD,"SharedData.ccexp");
 		CCEXP::LoadTable<float>(LD,"Table_1","single");
 		CCEXP::LoadTable<uint8_t>(LD,"Table_2","uint8");
