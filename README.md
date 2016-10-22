@@ -1,5 +1,9 @@
 # CCEXP
 
+## CCEXP Presentation
+You can take a look at **CCEPX presentation video** at [this vimeo link](https://vimeo.com/188399861)!
+
+
 ## What is CCEXP ?
 
 CCEXP (Class C EXPort) is a library in C++, based on templates and standard C/C++ libraries and functions, for organized data extraction and sharing between C++ code and other software (i.e. MatLab/Octave, Python etc). The sharing is currently done via files, which can store large amount of data.
