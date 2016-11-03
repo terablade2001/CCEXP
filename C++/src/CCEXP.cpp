@@ -99,18 +99,18 @@ void StoreData(CCEXP &obj, const char* FName) {
 		CCEXP_ERR_V(obj , ERROR::IO_Error , "StoreData():: Failed to open for writting the file [%s]." , SelName );
 	}
 
-	size_t MatricesToSave = 0;
-	const size_t N = obj.M.size();
-	for (size_t i=0; i < N; i++) {
+	uint64_t MatricesToSave = 0;
+	const uint64_t N = (uint64_t)obj.M.size();
+	for (uint64_t i=0; i < N; i++) {
 		if (! (obj.M[i])->getIgnoreStatus()) { MatricesToSave++; }
 	}
 	
 	if (fp != NULL) {
-		uint32_t STBytes = sizeof(size_t);
-		fwrite(&STBytes, sizeof(uint32_t), 1, fp); /// Store the size of (size_t)
+		uint32_t STBytes = sizeof(uint64_t);
+		fwrite(&STBytes, sizeof(uint32_t), 1, fp); /// Store the size of (uint64_t)
 	
-		fwrite(&MatricesToSave,sizeof(size_t),1,fp);
-		for (size_t i=0; i < N; i++) {
+		fwrite(&MatricesToSave,sizeof(uint64_t),1,fp);
+		for (uint64_t i=0; i < N; i++) {
 			if (! (obj.M[i])->getIgnoreStatus()) {
 				(obj.M[i])->StoreData(fp);
 			}
@@ -135,8 +135,8 @@ size_t StoreIData(CCEXP &obj) {
 		CCEXP_ERR_T(obj, RetV, ERROR::Other, "StoreIData():: Call to StoreData() failed... (!%u!)", 0);
 		obj.Status = CCEXPORTMAT_READY;
 	}
-	const size_t N = obj.M.size();
-	for (size_t i=0; i < N; i++) { (obj.M[i])->Reset(); }
+	const uint64_t N = (uint64_t)obj.M.size();
+	for (uint64_t i=0; i < N; i++) { (obj.M[i])->Reset(); }
 	obj.Status = CCEXPORTMAT_READY;
 	return RetV;
 }
@@ -368,11 +368,16 @@ void Open(CCEXP &obj, const char* filename) {
 		obj.lfp = fopen(filename,"rb");
 		FILE* lfp = obj.lfp;
 		if (lfp == NULL) CCEXP_ERR_V(obj , ERROR::IO_Error , "Open():: Failed to open for reading the file [%s]." , filename );		
+
 		uint32_t LoadSTBytes;
 		fread(&LoadSTBytes, sizeof(uint32_t), 1, lfp);
-		if (LoadSTBytes != sizeof(size_t)) 
-			CCEXP_ERR_V(obj , ERROR::IO_Error , "Open():: sizeof(size_t) is different than the one stored at the file [%s]." , filename );
-		fread(&obj.LoadTotalTables,sizeof(size_t),1,lfp);
+		if (LoadSTBytes != sizeof(uint64_t)) 
+			CCEXP_ERR_V(obj , ERROR::IO_Error , "Open():: sizeof(uint64_t) is different than the one stored at the file [%s]." , filename );
+
+		uint64_t LoadTotalTables;
+		fread(&LoadTotalTables,sizeof(uint64_t),1,lfp);
+		obj.LoadTotalTables = LoadTotalTables;
+
 		obj.LoadTableIndex = 0;
 	obj.Status = CCEXPORTMAT_READY;
 	return;

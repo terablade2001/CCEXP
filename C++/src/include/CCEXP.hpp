@@ -33,7 +33,7 @@
 #include <limits>
 #include <iostream>
 
-#define CCEXP_VERSION (0.056)
+#define CCEXP_VERSION (0.057)
 #define TRACK_ANALYTIC_ERRORS
 
 #ifndef __FNAME__
@@ -67,8 +67,8 @@
 		size_t n=size_t(N); if (n > 0) { \
 		vector<string>* v; size_t TN = CCEXP::GetErrors(obj, v);\
 		size_t DN = std::min(n, TN); \
-		if (TN != 0) { cout << endl << "[" << __FNAME__ << ", " << __LINE__ << "]: CCEXP Err Display >> " << endl; \
-		for (size_t i = 0; i < DN; i++) cout << " * " << (*v)[i].c_str() << endl; \
+		if (TN != 0) { cerr << endl << "[" << __FNAME__ << ", " << __LINE__ << "]: CCEXP Err Display >> " << endl; \
+		for (size_t i = 0; i < DN; i++) cerr << " * " << (*v)[i].c_str() << endl; \
 		(obj).Errors.clear(); }} }
 #endif
 #ifndef TRACK_ANALYTIC_ERRORS
@@ -373,14 +373,15 @@ template<class T> int CCEXPMat<T>::StoreData(FILE* fp) {
 	if (IgnoreM) return 0;
 	if (fp == NULL) CCEXP_ERR(*__parent, ERROR::IO_Error , "CCEXPMat::StoreData():: File pointer is NULL! (!%u!)", 0);
 	
-	size_t N = data.size();
-	size_t typeSize = sizeof(T);
+	uint64_t N = (uint64_t)data.size();
+	uint64_t typeSize = (uint64_t)sizeof(T);
+	uint64_t _maxRows64 = (uint64_t)_maxRows;
 	
 	fwrite(name,sizeof(char),64,fp); /// Table, Name
 	fwrite(type,sizeof(char),64,fp); /// Table, Type (string)
-	fwrite(&typeSize,sizeof(size_t),1,fp); /// Table, type size in Bytes
-	fwrite(&N,sizeof(size_t),1,fp); /// Table, number of rows
-	fwrite(&_maxRows,sizeof(size_t),1,fp); /// Maximum rows of the table.
+	fwrite(&typeSize,sizeof(uint64_t),1,fp); /// Table, type size in Bytes
+	fwrite(&N,sizeof(uint64_t),1,fp); /// Table, number of rows
+	fwrite(&_maxRows64,sizeof(uint64_t),1,fp); /// Maximum rows of the table.
 	if (N > _maxRows) N = _maxRows; /// Limit Rows ...
 	
 	if (data.size() > N)
@@ -390,10 +391,10 @@ template<class T> int CCEXPMat<T>::StoreData(FILE* fp) {
         );
 	
 	if (N > 0) {
-		vector<size_t> DPL; DPL.resize(N);
+		vector<uint64_t> DPL; DPL.resize(N);
 		int i = 0;
-		for (std::vector<T> n : data) DPL[i++] = n.size();
-		fwrite(DPL.data(), sizeof(size_t), N, fp);
+		for (std::vector<T> n : data) DPL[i++] = (uint64_t)n.size();
+		fwrite(DPL.data(), sizeof(uint64_t), N, fp);
 		DPL.clear();
 		for (std::vector<T> n : data) fwrite(n.data(), typeSize, n.size(), fp);
 	}
@@ -495,49 +496,49 @@ template<class T> inline void LoadTable(CCEXP &obj, const char* name, const char
 	if (lfp == NULL) CCEXP_ERR_V(obj, ERROR::IO_Error, "LoadTable():: File pointer is NULL. Use CCEXP::Open() first! (!%u!)", 0);
 	char loadName[64]={0};
 	char loadType[64]={0};
-	size_t typeSize=0;
-	size_t N=0;
-	size_t LastTablePosByte = 0;
-	size_t MaxRows=0;
+	uint64_t typeSize=0;
+	uint64_t N=0;
+	uint64_t LastTablePosByte = 0;
+	uint64_t MaxRows=0;
 	bool TableFound = false;
 	// Search from current LoadTableIndex to the Total Tables of files.
-	for (size_t i = obj.LoadTableIndex; i < obj.LoadTotalTables; i++) {
+	for (uint64_t i = obj.LoadTableIndex; i < obj.LoadTotalTables; i++) {
 		LastTablePosByte = ftell(lfp);
 		fread(loadName,sizeof(char),64,lfp);
 		fread(loadType,sizeof(char),64,lfp);
-		fread(&typeSize,sizeof(size_t),1,lfp);
-		fread(&N,sizeof(size_t),1,lfp);
-		fread(&MaxRows,sizeof(size_t),1,lfp);
+		fread(&typeSize,sizeof(uint64_t),1,lfp);
+		fread(&N,sizeof(uint64_t),1,lfp);
+		fread(&MaxRows,sizeof(uint64_t),1,lfp);
 		if (N > MaxRows) N = MaxRows;
 		if (strcmp(loadName,name)==0) {
 			TableFound = true; obj.LoadTableIndex = i+1; break;
 		}
-		vector<size_t> DPL; DPL.resize(N);
-		fread(DPL.data(), sizeof(size_t), N, lfp);
-		size_t TableBytes = 0;
-		for (size_t c = 0; c < N; c++)
+		vector<uint64_t> DPL; DPL.resize(N);
+		fread(DPL.data(), sizeof(uint64_t), N, lfp);
+		uint64_t TableBytes = 0;
+		for (uint64_t c = 0; c < N; c++)
 			TableBytes += DPL[c]*typeSize;
 		fseek(lfp, TableBytes, SEEK_CUR);
 	}
 	if (!TableFound) {
 		// If the Table has not been found in the file, search again from the start
-		fseek(lfp, sizeof(uint32_t) + sizeof(size_t), SEEK_SET);
+		fseek(lfp, sizeof(uint32_t) + sizeof(uint64_t), SEEK_SET);
 		
-		for (size_t i = 0; i < obj.LoadTableIndex; i++) {
+		for (uint64_t i = 0; i < obj.LoadTableIndex; i++) {
 			LastTablePosByte = ftell(lfp);
 			fread(loadName,sizeof(char),64,lfp);
 			fread(loadType,sizeof(char),64,lfp);
-			fread(&typeSize,sizeof(size_t),1,lfp);
-			fread(&N,sizeof(size_t),1,lfp);
-			fread(&MaxRows,sizeof(size_t),1,lfp);
+			fread(&typeSize,sizeof(uint64_t),1,lfp);
+			fread(&N,sizeof(uint64_t),1,lfp);
+			fread(&MaxRows,sizeof(uint64_t),1,lfp);
 			if (N > MaxRows) N = MaxRows;
 			if (strcmp(loadName,name)==0) {
 				TableFound = true; obj.LoadTableIndex = i+1; break;
 			}
-			vector<size_t> DPL; DPL.resize(N);
-			fread(DPL.data(), sizeof(size_t), N, lfp);
-			size_t TableBytes = 0;
-			for (size_t c = 0; c < N; c++)
+			vector<uint64_t> DPL; DPL.resize(N);
+			fread(DPL.data(), sizeof(uint64_t), N, lfp);
+			uint64_t TableBytes = 0;
+			for (uint64_t c = 0; c < N; c++)
 				TableBytes += DPL[c]*typeSize;
 			fseek(lfp, TableBytes, SEEK_CUR);
 		}
@@ -563,16 +564,16 @@ template<class T> inline void LoadTable(CCEXP &obj, const char* name, const char
 	int ret = U->Initialize(loadName, loadType, MaxRows, &obj);
 	if (ret != 0) CCEXP_ERR_V(obj, ret, "LoadTable():: Internal error occured while copying Table [%s] from an opened file!", name);
 	// Copy data from file to the new table.
-	vector<size_t> DPL; DPL.resize(N);
-	fread(DPL.data(), sizeof(size_t), N, lfp);
+	vector<uint64_t> DPL; DPL.resize(N);
+	fread(DPL.data(), sizeof(uint64_t), N, lfp);
 	vector<T> rowData;
-	size_t maxCols=0;
-	for (size_t row = 0; row < N; row++) {
-		const size_t columns = DPL[row];
+	uint64_t maxCols=0;
+	for (uint64_t row = 0; row < N; row++) {
+		const uint64_t columns = DPL[row];
 		if (columns > maxCols) { maxCols = columns; rowData.resize(maxCols); }
 		fread(rowData.data(), sizeof(T), columns, lfp);
 		ret = U->AddRow(rowData.data(), columns);
-		if (ret != 0) CCEXP_ERR_V(obj, ret, "LoadTable():: Internal error occured while copying Table's [%s], row [%zu] from an opened file!", name, row);
+		if (ret != 0) CCEXP_ERR_V(obj, ret, "LoadTable():: Internal error occured while copying Table's [%s], row [%zu] from an opened file!", name, (size_t)row);
 	}
 	// Warning: newRowFlag should be set to false, thus use to be able
 	// add data directly to the end of the last row if he want.
