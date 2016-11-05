@@ -33,7 +33,7 @@
 #include <limits>
 #include <iostream>
 
-#define CCEXP_VERSION (0.057)
+#define CCEXP_VERSION (0.058)
 #define TRACK_ANALYTIC_ERRORS
 
 #ifndef __FNAME__
@@ -776,6 +776,25 @@ template<class T> inline vector<T>* getRow(
 	return vret;
 }
 
+template<class T> inline T* getRow(
+	CCEXP &obj, size_t sel, size_t row, size_t& cols
+) {
+	obj.ErrorId = 0;
+	vector<T>* v_row = getRow<T>(obj, sel, row);
+	if (v_row != NULL) { cols = v_row->size(); return v_row->data(); }
+	else { cols = 0; return NULL; }
+}
+template<class T> inline T* getRow(
+	CCEXP &obj, const char* matname, size_t row, size_t &cols
+) {
+	obj.ErrorId = 0;
+	size_t sel = obj.getTableIndexByName(matname);
+	if (sel == MAXSIZE_T) {
+		CCEXP_ERR_T(obj, NULL, ERROR::TableNotFound, "getRow():: Failed to find table with name [%s]!", matname);
+	}
+	T* vret = getRow<T>(obj, sel, row, cols);
+	return vret;
+}
 
 template<class T> inline T* getVal(
 	CCEXP &obj, size_t sel, size_t row, size_t col

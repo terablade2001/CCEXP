@@ -195,6 +195,15 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
 	
+	// Test overloaded getRow(), which return pointer and columns number.
+	size_t cols;
+	float* f = CCEXP::getRow<float>(LD,"Table_float",8, cols);
+	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
+	if (f != NULL) {
+		printf("\n\nTable_float, Row=8 values:\n >> ");
+		for (size_t i = 0; i < cols; i++)	printf("%2.3f ",f[i]);
+		printf("\n");
+	} else printf("[%s: %i]: ERROR:: f = NULL!\n",__FNAME__,__LINE__);
 	
 	printf("\n... Program End ...\n");
 	return 0;
