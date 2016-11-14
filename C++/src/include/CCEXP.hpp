@@ -33,7 +33,7 @@
 #include <limits>
 #include <iostream>
 
-#define CCEXP_VERSION (0.058)
+#define CCEXP_VERSION (0.059)
 #define TRACK_ANALYTIC_ERRORS
 
 #ifndef __FNAME__

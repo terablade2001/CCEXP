@@ -40,7 +40,19 @@ CCEXP::CCEXP() :
 	Errors.clear();
 }
 
-CCEXP::CCEXP(const char* fname) {
+CCEXP::CCEXP(const char* fname):
+	fp(NULL),
+	Status(CCEXPORTMAT_INIT),
+	STCounter(0),
+	isActive(true),
+	ErrorId(0),
+	lfp(NULL),
+	LoadTotalTables(0),
+	LoadTableIndex(0)
+{
+	SavingFile[0]=0;
+	SavingFile[1]=0;
+	Errors.clear();
 	Initialize(*this, fname);
 }
 
