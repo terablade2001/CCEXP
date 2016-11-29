@@ -33,7 +33,7 @@
 #include <limits>
 #include <iostream>
 
-#define CCEXP_VERSION (0.059)
+#define CCEXP_VERSION (0.060)
 #define TRACK_ANALYTIC_ERRORS
 
 #ifndef __FNAME__
@@ -437,6 +437,8 @@ void	DeleteLastElement(CCEXP &obj, size_t sel, size_t row);
 size_t	getTableID(CCEXP &obj, const char* matname);
 char*	getTableName(CCEXP &obj, size_t sel);
 void	Reset(CCEXP &obj);
+void	CleanTable(CCEXP &obj, const char* matname);
+void	CleanTable(CCEXP &obj, size_t sel);
 size_t	GetErrors(CCEXP &obj, vector<string>* &ptrError);
 size_t	NumberOfTables(CCEXP &obj);
 void	DBG_SetStatus(CCEXP &obj, int status);

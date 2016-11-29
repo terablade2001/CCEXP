@@ -329,6 +329,28 @@ char* getTableName(CCEXP &obj, size_t sel) {
 }
 
 
+
+void CleanTable(CCEXP &obj, size_t sel) {
+	obj.ErrorId = 0;
+	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR_V(obj , ERROR::StatusNotReady , "CleanTable():: CCEXP Table with ID [%zu] has wrong status." , sel );
+	obj.Status = CCEXPORTMAT_ACTIVE;
+	if (sel < obj.M.size()) {
+		int ret = (obj.M[sel])->Reset();
+		if (ret != 0) CCEXP_ERR_V(obj, ret, "CleanTable():: Table with ID = %zu return error during call to CleanTable()...", sel);
+		obj.Status = CCEXPORTMAT_READY;
+		return;
+	}
+	obj.Status = CCEXPORTMAT_READY;
+	CCEXP_ERR_V(obj, ERROR::TableNotFound, "CleanTable():: Table with ID = %zu was not found!...", sel);
+}
+void CleanTable(CCEXP &obj, const char* matname) {
+	obj.ErrorId = 0;
+	size_t sel = obj.getTableIndexByName(matname);
+	if (sel == MAXSIZE_T) CCEXP_ERR_V(obj, ERROR::TableNotFound, "CleanTable():: Failed to find table with name [%s]!", matname);
+	CleanTable(obj, sel); 
+}
+
+
 void Reset(CCEXP &obj) {
 	obj.ErrorId = 0;
 	obj.Status = CCEXPORTMAT_ACTIVE;
