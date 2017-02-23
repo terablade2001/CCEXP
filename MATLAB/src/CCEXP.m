@@ -95,7 +95,7 @@ function [r, d] = CCEXP(fname, logg)
 			v.(r(i).name) = r(i);
 		end
 		fprintf('\n')
-	else
+	else if (logg ~= -1)
 		fprintf('\n%s::> ... loaded!\n',fname);
 	end;
 end
