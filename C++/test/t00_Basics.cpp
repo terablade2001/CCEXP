@@ -60,6 +60,7 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 		CCEXP::AddTable <float>(DBG,"T_U8","uint8");
 printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 		_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+printf("[%s: %i]: ****\n",__FNAME__,__LINE__);
     CCEXP::AddTable <float>(DBG,"T_F32","single");
 	CCEXP::AddTable <uint8_t>(DBG,"TestMaxR","uint8",3);
 	CCEXP::AddTable <int>(DBG,"AddVal","int32");
@@ -74,7 +75,7 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	// Add a third table, but for this 'debug-session' ignore it completely.
 	// If need to re-enable it, just remove letter I
     CCEXP::AddTableI<char>(DBG,"T_Char","char");
-    
+
 	// Add a string to the T_Char Table. If need to store that table too,
 	// then change the corresponded called function AddTableI() to AddTable()!
 	char TestString[256] = "Hello World!";	
@@ -97,25 +98,26 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 		if (row > 127) CCEXP::AddRow<float>(DBG,"T_F32",pF32,row);
 		else CCEXP::NewRow(DBG,"T_F32",1);
 	}
-	
+printf("[%s: %i]: ****\n",__FNAME__,__LINE__);
 	// Until the below line, there should not be any error.
 	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
-		
+printf("[%s: %i]: ****\n",__FNAME__,__LINE__);
 	 // Add 5 New Empty Lines to TestMaxR (ID=2).
 	 // Notice that Table with ID=2 (TestMaxR) is added with maximum Rows set
 	 // to 3 (by AddMatrix()). Thus errors should hit after 3 max lines.
-	for (int row = 0; row < 5; row++) CCEXP::NewRow(DBG,2,1);
+	for (int row = 0; row < 5; row++)
+		CCEXP::NewRow(DBG, 2, 1);
 printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	_DBG_ERROR_STOP_OR_CONTINUE_(DBG); 
 	
 	
 	size_t R0 = CCEXP::Rows(DBG, "T_U8");
-	printf("\nTable T_U8 has [%zu] rows\n", R0);
+	printf("\nTable T_U8 has [" __ZU__ "] rows\n", R0);
 	
 		
 	size_t SelRow = 255;
 	size_t C0 = CCEXP::Cols(DBG, "T_U8", SelRow);
-	printf("\nRow [%zu] of Table T_U8 has [%zu] columns\n", SelRow, (size_t)C0);
+	printf("\nRow [" __ZU__ "] of Table T_U8 has [" __ZU__ "] columns\n", SelRow, (size_t)C0);
 	
 	// After TestMaxR table, no more errors should exist in the following test.
 	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);

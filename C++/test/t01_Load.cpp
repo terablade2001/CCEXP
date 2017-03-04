@@ -117,11 +117,11 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 		size_t NTables = CCEXP::NumberOfTables(LD);
 		size_t rows;
 		char* TableName;
-		printf("\n\n[%s: %i]: Tables in LD (Should be 2) : %zu\n",__FNAME__,__LINE__, NTables);
+		printf("\n\n[%s: %i]: Tables in LD (Should be 2) : " __ZU__ "\n",__FNAME__,__LINE__, NTables);
 		for (size_t i = 0; i < NTables; i++) {
 			TableName = CCEXP::getTableName(LD, i);
 			rows = CCEXP::Rows(LD,TableName);
-			printf("[%s: %i]: Table %zu --> %s with (%zu)rows\n",__FNAME__,__LINE__, i, TableName, rows);
+			printf("[%s: %i]: Table " __ZU__ " --> %s with (" __ZU__ ")rows\n",__FNAME__,__LINE__, i, TableName, rows);
 		}
 	//}
 	
@@ -132,7 +132,7 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 		CCEXP::AddTable<int>(LD,"A_New_Table","int32");
 		for (int i = 0; i < 5; i++) CCEXP::AddVal(LD,"A_New_Table",i); 
 		NTables = CCEXP::NumberOfTables(LD);
-		printf("[%s: %i]: Tables in LD (Should be 3) : %zu\n",__FNAME__,__LINE__, NTables);
+		printf("[%s: %i]: Tables in LD (Should be 3) : " __ZU__ "\n",__FNAME__,__LINE__, NTables);
 	
 	
 	// Load the rest tables at LD.
@@ -145,7 +145,7 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
 	
 	NTables = CCEXP::NumberOfTables(LD);
-	printf("[%s: %i]: Tables in LD (Should be 5) : %zu\n",__FNAME__,__LINE__, NTables);
+	printf("[%s: %i]: Tables in LD (Should be 5) : " __ZU__ "\n",__FNAME__,__LINE__, NTables);
 	
 	
 	// Test if Tables are limited to new rows.
@@ -179,7 +179,7 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	for (size_t i = 0; i < NTables; i++) {
 		TableName = CCEXP::getTableName(LD, i);
 		rows = CCEXP::Rows(LD,TableName);
-		printf("[%s: %i]: Table %zu --> %s with (%zu)rows\n",__FNAME__,__LINE__, i, TableName, rows);
+		printf("[%s: %i]: Table " __ZU__ " --> %s with (" __ZU__ ")rows\n",__FNAME__,__LINE__, i, TableName, rows);
 	}
 	
 
