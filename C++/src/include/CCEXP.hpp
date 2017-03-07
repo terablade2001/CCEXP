@@ -34,6 +34,7 @@
 #include <limits>
 #include <iostream>
 
+#define __CCEXP_VECTOR_CLEAR(v) (v).clear(); (v).resize(0);
 /* ----------- Support for MSVC compilers --------
 	As MSVC has basic differences with other compilers, I'm trying to modify 
 my macros thus if #_MSC_VER is defined other code to be used.
@@ -51,7 +52,7 @@ definition which can change depending the compiler.
 	#define __ZU__ "%zu"
 #endif
 
-#define CCEXP_VERSION (0.061)
+#define CCEXP_VERSION (0.062)
 #define TRACK_ANALYTIC_ERRORS
 
 #ifndef __FNAME__
@@ -140,7 +141,7 @@ definition which can change depending the compiler.
 			"]: CCEXP Err Display >> " << endl; \
 			for (size_t i = 0; i < DN; i++)\
 				cerr << " * " << (*v)[i].c_str() << endl; \
-			(obj).Errors.clear(); }}\
+			(obj).Errors.clear();  }}\
 			}
 	#endif
 	#ifndef TRACK_ANALYTIC_ERRORS
@@ -284,7 +285,7 @@ template<class T> int CCEXPMat<T>::Initialize(const char* Name, const char* type
 	__parent = par; // Keep a pointer to the parent object for error tracking.
 	memset(name,0,65); memset(type,0,65); // Set all bytes to 0.
 	snprintf(name,64,"%s",Name); snprintf(type,64,"%s",typeName);
-	data.clear();
+	__CCEXP_VECTOR_CLEAR(data);
 	_maxRows = (MaxRows == 0) ?  std::numeric_limits<size_t>::max() : MaxRows;
 	return 0;
 }
@@ -350,7 +351,7 @@ template<class T> int CCEXPMat<T>::InitRowByScalar(size_t row, T val, size_t n) 
 		const size_t N = data.size();
 		if (row >= N) CCEXP_ERR(*__parent, ERROR::ReqRowLargerThanInTable , "CCEXPMat::InitRowByScalar():: Requested Row is not exist yet! (row >= _maxRows) (!%u!)", 0);
 		auto it = std::next(data.begin(), row);
-		(*it).clear();
+		__CCEXP_VECTOR_CLEAR(*it);
 		if (n > 0) (*it).resize(n, val);
 	} else {
 		vector<T> dl; dl.clear();
@@ -470,7 +471,7 @@ template<class T> int CCEXPMat<T>::StoreData(FILE* fp) {
 		int i = 0;
 		for (std::vector<T> n : data) DPL[i++] = (uint64_t)n.size();
 		fwrite(DPL.data(), sizeof(uint64_t), N, fp);
-		DPL.clear();
+		__CCEXP_VECTOR_CLEAR(DPL);
 		for (std::vector<T> n : data) fwrite(n.data(), typeSize, n.size(), fp);
 	}
 	return 0;
@@ -478,7 +479,8 @@ template<class T> int CCEXPMat<T>::StoreData(FILE* fp) {
 
 
 template<class T> int CCEXPMat<T>::Reset(void) {
-	data.clear(); newRowFlag = true;
+	__CCEXP_VECTOR_CLEAR(data);
+	newRowFlag = true;
 	return 0;
 }
 
