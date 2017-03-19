@@ -29,11 +29,13 @@
 #include <cstring>
 #include <memory>
 #include <list>
-#include <vector>
+// #include <vector>
+#include "MVECTOR.hpp"
 #include <cstdio>
 #include <limits>
 #include <iostream>
 
+#define __CCEXP_VECTOR_CLEAR(v) (v).clear(); (v).resize(0);
 /* ----------- Support for MSVC compilers --------
 	As MSVC has basic differences with other compilers, I'm trying to modify 
 my macros thus if #_MSC_VER is defined other code to be used.
@@ -51,7 +53,7 @@ definition which can change depending the compiler.
 	#define __ZU__ "%zu"
 #endif
 
-#define CCEXP_VERSION (0.061)
+#define CCEXP_VERSION (0.062)
 #define TRACK_ANALYTIC_ERRORS
 
 #ifndef __FNAME__
@@ -90,7 +92,7 @@ definition which can change depending the compiler.
 
 		#define __CCEXP_ERR_DISPLAY(obj, N) { \
 			size_t n=size_t(N); if (n > 0) { \
-			vector<string>* v; size_t TN = CCEXP::GetErrors(obj, v);\
+			MVECTOR::MVECTOR<string>* v; size_t TN = CCEXP::GetErrors(obj, v);\
 			size_t DN = std::min(n, TN); \
 			if (TN != 0) {\
 			cerr << endl << "[" << __FNAME__ << ", " << __LINE__ << \
@@ -133,14 +135,14 @@ definition which can change depending the compiler.
 
 		#define __CCEXP_ERR_DISPLAY(obj, N) { \
 			size_t n=size_t(N); if (n > 0) { \
-			vector<string>* v; size_t TN = CCEXP::GetErrors(obj, v);\
+			MVECTOR::MVECTOR<string>* v; size_t TN = CCEXP::GetErrors(obj, v);\
 			size_t DN = std::min(n, TN); \
 			if (TN != 0) {\
 			cerr << endl << "[" << __FNAME__ << ", " << __LINE__ << \
 			"]: CCEXP Err Display >> " << endl; \
 			for (size_t i = 0; i < DN; i++)\
 				cerr << " * " << (*v)[i].c_str() << endl; \
-			(obj).Errors.clear(); }}\
+			(obj).Errors.clear();  }}\
 			}
 	#endif
 	#ifndef TRACK_ANALYTIC_ERRORS
@@ -209,7 +211,7 @@ class CCEXPMat : public CCEXPBase {
 		int SetVal(size_t row, size_t col, T val);
 		int InitRowByScalar(size_t row, T val, size_t n);
 
-		int getRow(size_t row, vector<T>* &vres);
+		int getRow(size_t row, MVECTOR::MVECTOR<T>* &vres);
 
 		int CompareName(const char* Name);
 		bool getIgnoreStatus(void);
@@ -231,7 +233,7 @@ class CCEXPMat : public CCEXPBase {
 		char type[65];
 		bool IgnoreM;
 		bool newRowFlag;
-		list<vector<T>> data;
+		list<MVECTOR::MVECTOR<T>> data;
 		size_t _maxRows;
 		CCEXP* __parent;
 };
@@ -250,9 +252,9 @@ class CCEXP {
 	size_t LoadTotalTables;
 	size_t LoadTableIndex;
 	
-	vector<shared_ptr<CCEXPBase>> M;
+	MVECTOR::MVECTOR<shared_ptr<CCEXPBase>> M;
 	char SavingFile[257];
-	vector<string> Errors;
+	MVECTOR::MVECTOR<string> Errors;
 
 	CCEXP();
 	CCEXP(const char* fname);
@@ -284,7 +286,7 @@ template<class T> int CCEXPMat<T>::Initialize(const char* Name, const char* type
 	__parent = par; // Keep a pointer to the parent object for error tracking.
 	memset(name,0,65); memset(type,0,65); // Set all bytes to 0.
 	snprintf(name,64,"%s",Name); snprintf(type,64,"%s",typeName);
-	data.clear();
+	__CCEXP_VECTOR_CLEAR(data);
 	_maxRows = (MaxRows == 0) ?  std::numeric_limits<size_t>::max() : MaxRows;
 	return 0;
 }
@@ -293,7 +295,7 @@ template<class T> int CCEXPMat<T>::AddValue(T val) {
 	if (IgnoreM) return 0; // This is not an error - We just ignore the Table...
 	const size_t N = data.size();
 	if ((N == 0) || (newRowFlag==true)) {
-		vector<T> dl; dl.clear(); data.push_back(dl);
+		MVECTOR::MVECTOR<T> dl; dl.clear(); data.push_back(dl);
 		newRowFlag = false;
 	}
 	data.back().push_back(val);
@@ -304,7 +306,7 @@ template<class T> int CCEXPMat<T>::AddRow(T* ptr, size_t n) {
 	if (IgnoreM) return 0;
 	const size_t N = data.size();
 	if (N >= _maxRows) CCEXP_ERR(*__parent, ERROR::MaximumRowsReached , "CCEXPMat::AddRow():: Maximum Rows Reached! (!%u!)", 0);
-	vector<T> dl; dl.resize(n);
+	MVECTOR::MVECTOR<T> dl; dl.resize(n);
 	memcpy(dl.data(), ptr, n * sizeof(T));
 	data.push_back(dl);
 	newRowFlag=true;
@@ -350,17 +352,17 @@ template<class T> int CCEXPMat<T>::InitRowByScalar(size_t row, T val, size_t n) 
 		const size_t N = data.size();
 		if (row >= N) CCEXP_ERR(*__parent, ERROR::ReqRowLargerThanInTable , "CCEXPMat::InitRowByScalar():: Requested Row is not exist yet! (row >= _maxRows) (!%u!)", 0);
 		auto it = std::next(data.begin(), row);
-		(*it).clear();
+		__CCEXP_VECTOR_CLEAR(*it);
 		if (n > 0) (*it).resize(n, val);
 	} else {
-		vector<T> dl; dl.clear();
+		MVECTOR::MVECTOR<T> dl; dl.clear();
 		if (n > 0) dl.resize(n, val);
 		data.push_back(dl);
 	}
 	return 0;
 }
 
-template<class T> int CCEXPMat<T>::getRow(size_t row, vector<T>* &vres) {
+template<class T> int CCEXPMat<T>::getRow(size_t row, MVECTOR::MVECTOR<T>* &vres) {
 	const size_t N = data.size();
 	if (row >= N) CCEXP_ERR(*__parent, ERROR::ReqRowLargerThanInTable , "CCEXPMat::getRowPtr():: Requested Row is not exist yet! (row >= _maxRows) (!%u!)", 0);	
 	auto it = std::next(data.begin(), row);
@@ -390,7 +392,7 @@ template<class T> int CCEXPMat<T>::NewRow(int empty) {
 
 	newRowFlag=true;
 	if (empty == 1) {
-		vector<T> dl; dl.clear(); data.push_back(dl);
+		MVECTOR::MVECTOR<T> dl; dl.clear(); data.push_back(dl);
 	}
 	return 0;
 }
@@ -466,19 +468,20 @@ template<class T> int CCEXPMat<T>::StoreData(FILE* fp) {
         );
 	
 	if (N > 0) {
-		vector<uint64_t> DPL; DPL.resize(N);
+		MVECTOR::MVECTOR<uint64_t> DPL; DPL.resize(N);
 		int i = 0;
-		for (std::vector<T> n : data) DPL[i++] = (uint64_t)n.size();
+		for (MVECTOR::MVECTOR<T> n : data) DPL[i++] = (uint64_t)n.size();
 		fwrite(DPL.data(), sizeof(uint64_t), N, fp);
-		DPL.clear();
-		for (std::vector<T> n : data) fwrite(n.data(), typeSize, n.size(), fp);
+		__CCEXP_VECTOR_CLEAR(DPL);
+		for (MVECTOR::MVECTOR<T> n : data) fwrite(n.data(), typeSize, n.size(), fp);
 	}
 	return 0;
 }
 
 
 template<class T> int CCEXPMat<T>::Reset(void) {
-	data.clear(); newRowFlag = true;
+	__CCEXP_VECTOR_CLEAR(data);
+	newRowFlag = true;
 	return 0;
 }
 
@@ -514,7 +517,7 @@ char*	getTableName(CCEXP &obj, size_t sel);
 void	Reset(CCEXP &obj);
 void	CleanTable(CCEXP &obj, const char* matname);
 void	CleanTable(CCEXP &obj, size_t sel);
-size_t	GetErrors(CCEXP &obj, vector<string>* &ptrError);
+size_t	GetErrors(CCEXP &obj, MVECTOR::MVECTOR<string>* &ptrError);
 size_t	NumberOfTables(CCEXP &obj);
 void	DBG_SetStatus(CCEXP &obj, int status);
 
@@ -590,7 +593,7 @@ template<class T> inline void LoadTable(CCEXP &obj, const char* name, const char
 		if (strcmp(loadName,name)==0) {
 			TableFound = true; obj.LoadTableIndex = i+1; break;
 		}
-		vector<uint64_t> DPL; DPL.resize(N);
+		MVECTOR::MVECTOR<uint64_t> DPL; DPL.resize(N);
 		fread(DPL.data(), sizeof(uint64_t), N, lfp);
 		uint64_t TableBytes = 0;
 		for (uint64_t c = 0; c < N; c++)
@@ -612,7 +615,7 @@ template<class T> inline void LoadTable(CCEXP &obj, const char* name, const char
 			if (strcmp(loadName,name)==0) {
 				TableFound = true; obj.LoadTableIndex = i+1; break;
 			}
-			vector<uint64_t> DPL; DPL.resize(N);
+			MVECTOR::MVECTOR<uint64_t> DPL; DPL.resize(N);
 			fread(DPL.data(), sizeof(uint64_t), N, lfp);
 			uint64_t TableBytes = 0;
 			for (uint64_t c = 0; c < N; c++)
@@ -641,9 +644,9 @@ template<class T> inline void LoadTable(CCEXP &obj, const char* name, const char
 	int ret = U->Initialize(loadName, loadType, MaxRows, &obj);
 	if (ret != 0) CCEXP_ERR_V(obj, ret, "LoadTable():: Internal error occured while copying Table [%s] from an opened file!", name);
 	// Copy data from file to the new table.
-	vector<uint64_t> DPL; DPL.resize(N);
+	MVECTOR::MVECTOR<uint64_t> DPL; DPL.resize(N);
 	fread(DPL.data(), sizeof(uint64_t), N, lfp);
-	vector<T> rowData;
+	MVECTOR::MVECTOR<T> rowData;
 	uint64_t maxCols=0;
 	for (uint64_t row = 0; row < N; row++) {
 		const uint64_t columns = DPL[row];
@@ -823,7 +826,7 @@ template<class T> inline void InitRowByScalar(
 }
 
 
-template<class T> inline vector<T>* getRow(
+template<class T> inline MVECTOR::MVECTOR<T>* getRow(
 	CCEXP &obj, size_t sel, size_t row
 ) {
 	obj.ErrorId = 0;
@@ -832,7 +835,7 @@ template<class T> inline vector<T>* getRow(
 	obj.Status = CCEXPORTMAT_ACTIVE;
 	if (sel < obj.M.size()) {
 		CCEXPMat<T>* U = static_cast<CCEXPMat<T>*>(obj.M[sel].get());
-		vector<T>* vret;
+		MVECTOR::MVECTOR<T>* vret;
 		int ret = U->getRow(row, vret);
 		if (ret != 0) CCEXP_ERR_T(obj, NULL, ret, "getRow():: Internal error occured during getRow() (error: %i)!", ret);
 		obj.Status = CCEXPORTMAT_READY;
@@ -841,7 +844,7 @@ template<class T> inline vector<T>* getRow(
 	obj.Status = CCEXPORTMAT_READY;
 	CCEXP_ERR_T(obj, NULL, ERROR::TableNotFound, "getRow():: Failed to find table with ID [" __ZU__ "]!", sel);
 }
-template<class T> inline vector<T>* getRow(
+template<class T> inline MVECTOR::MVECTOR<T>* getRow(
 	CCEXP &obj, const char* matname, size_t row
 ) {
 	obj.ErrorId = 0;
@@ -849,7 +852,7 @@ template<class T> inline vector<T>* getRow(
 	if (sel == MAXSIZE_T) {
 		CCEXP_ERR_T(obj, NULL, ERROR::TableNotFound, "getRow():: Failed to find table with name [%s]!", matname);
 	}
-	vector<T>* vret = getRow<T>(obj, sel, row);
+	MVECTOR::MVECTOR<T>* vret = getRow<T>(obj, sel, row);
 	return vret;
 }
 
@@ -857,7 +860,7 @@ template<class T> inline T* getRow(
 	CCEXP &obj, size_t sel, size_t row, size_t& cols
 ) {
 	obj.ErrorId = 0;
-	vector<T>* v_row = getRow<T>(obj, sel, row);
+	MVECTOR::MVECTOR<T>* v_row = getRow<T>(obj, sel, row);
 	if (v_row != NULL) { cols = v_row->size(); return v_row->data(); }
 	else { cols = 0; return NULL; }
 }
@@ -882,7 +885,7 @@ template<class T> inline T* getVal(
 	obj.Status = CCEXPORTMAT_ACTIVE;
 	if (sel < obj.M.size()) {
 		CCEXPMat<T>* U = static_cast<CCEXPMat<T>*>(obj.M[sel].get());
-		vector<T>* vecres;
+		MVECTOR::MVECTOR<T>* vecres;
 		int ret = U->getRow(row, vecres);
 		if (ret != 0) CCEXP_ERR_T(obj, NULL, ret, "getVal():: Internal error occured during getVal() (error: %i)!", ret);
 		size_t N = vecres->size();

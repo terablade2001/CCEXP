@@ -24,6 +24,7 @@
 #include "include/CCEXP.hpp"
 
 using namespace std;
+
 namespace CCEXP {
 
 CCEXP::CCEXP() :
@@ -38,7 +39,7 @@ CCEXP::CCEXP() :
 { 
 	SavingFile[0]=0;
 	SavingFile[1]=0;
-	Errors.clear();
+	__CCEXP_VECTOR_CLEAR(Errors);
 }
 
 CCEXP::CCEXP(const char* fname):
@@ -52,8 +53,9 @@ CCEXP::CCEXP(const char* fname):
 	LoadTableIndex(0)
 {
 	SavingFile[0]=0;
-	SavingFile[1]=0;
-	Errors.clear();
+	SavingFile[1]=0;	
+	__CCEXP_VECTOR_CLEAR(Errors);
+	
 	Initialize(*this, fname);
 }
 
@@ -82,7 +84,7 @@ void CCEXP::setStatus(int st) { Status = st; }
 
 //@#: ############### CCEXP API Functions ###############
 void Initialize(CCEXP &obj, const char* fname, const char* Path, bool isactive) {
-	obj.Errors.clear();
+	__CCEXP_VECTOR_CLEAR(obj.Errors);
 	obj.ErrorId = 0;
 	obj.isActive = isactive;
 	if (!obj.isActive) return; // This is normal return, if the object is non-active. It's not an error.
@@ -356,7 +358,7 @@ void CleanTable(CCEXP &obj, const char* matname) {
 void Reset(CCEXP &obj) {
 	obj.ErrorId = 0;
 	obj.Status = CCEXPORTMAT_ACTIVE;
-	obj.M.clear();
+	__CCEXP_VECTOR_CLEAR(obj.M);
 	if (obj.fp  != NULL) { fclose(obj.fp);  obj.fp  = NULL; }
 	if (obj.lfp != NULL) { fclose(obj.lfp); obj.lfp = NULL; }
 	obj.STCounter       = 0;
@@ -369,7 +371,7 @@ void Reset(CCEXP &obj) {
 
 size_t GetErrors(
 	CCEXP &obj,
-	vector<string>* &ptrError
+	MVECTOR::MVECTOR<string>* &ptrError
 ) {
 	// This function should not change CCEXP object status. Thus if a critical
 	// error occurs, then all the CCEXP object should be disabled (status errors

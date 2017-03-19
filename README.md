@@ -1,4 +1,7 @@
-# CCEXP
+# CCEXP - MVECTOR Test
+
+MVECTOR (https://github.com/terablade2001/MVECTOR) is a personalized approach to std::vector.
+In this branch I'm testing CCEXP using MVECTOR instead of std::vector.
 
 ## CCEXP Presentation
 You can take a look at **CCEPX presentation video** at [this vimeo link](https://vimeo.com/188399861)!

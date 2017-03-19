@@ -198,7 +198,7 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	//   the 3 data was add at the end of row 8. (DBG object)
 	// 2 data when later on at LD object I tried to add 2 new rows which also
 	//   failed due to the _maxRows = 9 restriction.
-	vector<float>* fv = CCEXP::getRow<float>(LD,"Table_float",8);
+	MVECTOR::MVECTOR<float>* fv = CCEXP::getRow<float>(LD,"Table_float",8);
 	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
 	if (fv != NULL) {
 		printf("\n\nTable_float, Row=8 values:\n >> ");
