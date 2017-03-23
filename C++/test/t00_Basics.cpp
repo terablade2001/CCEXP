@@ -39,9 +39,9 @@
 #endif
 
 // Define a CCEXP object (DBG)
-CCEXP::CCEXP DBG;
+static CCEXP::CCEXP DBG;
 
-int main(int argc, char **argv) {
+int t00_Basics() {
 	// Initialize DBG object, and set it a Filename where it will store
 	// it's data when CCEXP::StoreData() fuction is called.
 	CCEXP::Initialize(DBG,"DataFile.ccexp");
@@ -221,6 +221,11 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	
 	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
 	
+#ifdef __CCEXP__USE_MVECTOR
+	MVECTOR<char> Mem;
+	printf("--- MVECTOR Size before Reset: " __ZU__ " bytes. \n", Mem.total_bytes());
+#endif
+	
 	// Store all DBG data. This will clear the data of all Tables,
 	// but will not remove the tables; you can re-add new data.
     CCEXP::StoreData(DBG);
@@ -228,6 +233,10 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	// Reset the DBG object. Everything is cleared. Need to Initialize
 	// again in order to use it again!
 	CCEXP::Reset(DBG);
+
+#ifdef __CCEXP__USE_MVECTOR
+	printf("--- MVECTOR Size after Reset: " __ZU__ " bytes. \n", Mem.total_bytes());
+#endif
 	
 	printf("\n... Program End ...\n");
 	return 0;

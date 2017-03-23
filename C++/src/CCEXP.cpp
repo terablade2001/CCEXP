@@ -24,6 +24,7 @@
 #include "include/CCEXP.hpp"
 
 using namespace std;
+__USE_MVECTOR_NAMESPACE__
 
 namespace CCEXP {
 
@@ -371,7 +372,7 @@ void Reset(CCEXP &obj) {
 
 size_t GetErrors(
 	CCEXP &obj,
-	MVECTOR::MVECTOR<string>* &ptrError
+	MVECTOR<string>* &ptrError
 ) {
 	// This function should not change CCEXP object status. Thus if a critical
 	// error occurs, then all the CCEXP object should be disabled (status errors
