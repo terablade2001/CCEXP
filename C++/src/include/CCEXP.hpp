@@ -1,6 +1,6 @@
 // MIT License
 
-// Copyright (c) 2016 Vasileios Kon. Pothos (terablade2001)
+// Copyright (c) 2016 - 2017 Vasileios Kon. Pothos (terablade2001)
 // https://github.com/terablade2001/CCEXP
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -39,12 +39,14 @@
 #include <vector>
 #define MVECTOR vector
 #define __USE_MVECTOR_NAMESPACE__ //..
+#define __CCEXP_VECTOR_CLEAR(v) (v).clear(); (v).resize(0);
 #else
 #include "../../MVECTOR/include/MVECTOR.hpp"
 #define __USE_MVECTOR_NAMESPACE__ using namespace ns_MVECTOR;
+#define __CCEXP_VECTOR_CLEAR(v) (v).clear();
 #endif
 
-#define __CCEXP_VECTOR_CLEAR(v) (v).clear(); (v).resize(0);
+
 /* ----------- Support for MSVC compilers --------
 	As MSVC has basic differences with other compilers, I'm trying to modify 
 my macros thus if #_MSC_VER is defined other code to be used.
@@ -62,7 +64,7 @@ definition which can change depending the compiler.
 	#define __ZU__ "%zu"
 #endif
 
-#define CCEXP_VERSION (0.062)
+#define CCEXP_VERSION (0.063)
 #define TRACK_ANALYTIC_ERRORS
 
 #ifndef __FNAME__
@@ -316,9 +318,14 @@ template<class T> int CCEXPMat<T>::AddRow(T* ptr, size_t n) {
 	if (IgnoreM) return 0;
 	const size_t N = data.size();
 	if (N >= _maxRows) CCEXP_ERR(*__parent, ERROR::MaximumRowsReached , "CCEXPMat::AddRow():: Maximum Rows Reached! (!%u!)", 0);
-	MVECTOR<T> dl; dl.resize(n);
-	memcpy(dl.data(), ptr, n * sizeof(T));
-	data.push_back(dl);
+	MVECTOR<char> MM;
+	{
+		MVECTOR<T> dl;
+		data.push_back(dl);
+		(data.back()).resize(n);
+		T* _ptr = data.back().data();
+		memcpy(_ptr, ptr, n * sizeof(T));
+	}
 	newRowFlag=true;
 	return 0;
 }

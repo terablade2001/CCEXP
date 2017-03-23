@@ -1,6 +1,6 @@
 // MIT License
 
-// Copyright (c) 2016 Vasileios Kon. Pothos (terablade2001)
+// Copyright (c) 2016 - 2017 Vasileios Kon. Pothos (terablade2001)
 // https://github.com/terablade2001/CCEXP
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -42,17 +42,25 @@
 static CCEXP::CCEXP DBG;
 
 int t00_Basics() {
+#ifdef __CCEXP__USE_MVECTOR
+	MVECTOR<char> Mem;
+#endif
 	// Initialize DBG object, and set it a Filename where it will store
 	// it's data when CCEXP::StoreData() fuction is called.
 	CCEXP::Initialize(DBG,"DataFile.ccexp");
 	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+#ifdef __CCEXP__USE_MVECTOR
+	printf("[%s: %i]: #1 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
+#endif
 	
-    	
+  
 	// Do a second initialization.. This will procude an error!
 		CCEXP::Initialize(DBG,"DataFile.ccexp");	
 printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 		_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
-	
+#ifdef __CCEXP__USE_MVECTOR
+	printf("[%s: %i]: #2 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
+#endif
 
 	// Add Tables
     CCEXP::AddTable <uint8_t>(DBG,"T_U8","uint8");
@@ -60,8 +68,11 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 		CCEXP::AddTable <float>(DBG,"T_U8","uint8");
 printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 		_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
-printf("[%s: %i]: ****\n",__FNAME__,__LINE__);
-    CCEXP::AddTable <float>(DBG,"T_F32","single");
+#ifdef __CCEXP__USE_MVECTOR
+	printf("[%s: %i]: #3 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
+#endif
+
+	CCEXP::AddTable <float>(DBG,"T_F32","single");
 	CCEXP::AddTable <uint8_t>(DBG,"TestMaxR","uint8",3);
 	CCEXP::AddTable <int>(DBG,"AddVal","int32");
 	CCEXP::AddTable <int>(DBG,"DeleteRow","int32");
@@ -74,18 +85,18 @@ printf("[%s: %i]: ****\n",__FNAME__,__LINE__);
 	
 	// Add a third table, but for this 'debug-session' ignore it completely.
 	// If need to re-enable it, just remove letter I
-    CCEXP::AddTableI<char>(DBG,"T_Char","char");
+  CCEXP::AddTable <char>(DBG,"T_Char","char");
 
 	// Add a string to the T_Char Table. If need to store that table too,
 	// then change the corresponded called function AddTableI() to AddTable()!
-	char TestString[256] = "Hello World!";	
+	char TestString[256] = "Hello World!";
 	CCEXP::AddRow<char>(DBG,"T_Char",TestString,256);
-		
-    uint8_t* pU8 = new uint8_t[256];
-    float* pF32 = new float[256];
-	
+
+	uint8_t* pU8 = new uint8_t[256];
+	float* pF32 = new float[256];
+
 	// Create 255 rows of uint8_t and float data.
-    for (int row = 0; row < 256; row++) {
+	for (int row = 0; row < 256; row++) {
 		for (int col = 0; col < 256; col++) {
 			pU8[col] = col;
 			pF32[col] = float(col)+0.125f;
@@ -98,10 +109,14 @@ printf("[%s: %i]: ****\n",__FNAME__,__LINE__);
 		if (row > 127) CCEXP::AddRow<float>(DBG,"T_F32",pF32,row);
 		else CCEXP::NewRow(DBG,"T_F32",1);
 	}
-printf("[%s: %i]: ****\n",__FNAME__,__LINE__);
+
 	// Until the below line, there should not be any error.
 	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
-printf("[%s: %i]: ****\n",__FNAME__,__LINE__);
+#ifdef __CCEXP__USE_MVECTOR
+	printf("\n");
+	printf("[%s: %i]: #4 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
+#endif
+
 	 // Add 5 New Empty Lines to TestMaxR (ID=2).
 	 // Notice that Table with ID=2 (TestMaxR) is added with maximum Rows set
 	 // to 3 (by AddMatrix()). Thus errors should hit after 3 max lines.
@@ -109,19 +124,23 @@ printf("[%s: %i]: ****\n",__FNAME__,__LINE__);
 		CCEXP::NewRow(DBG, 2, 1);
 printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	_DBG_ERROR_STOP_OR_CONTINUE_(DBG); 
-	
+#ifdef __CCEXP__USE_MVECTOR
+	printf("[%s: %i]: #5 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
+#endif
 	
 	size_t R0 = CCEXP::Rows(DBG, "T_U8");
 	printf("\nTable T_U8 has [" __ZU__ "] rows\n", R0);
 	
-		
+
 	size_t SelRow = 255;
 	size_t C0 = CCEXP::Cols(DBG, "T_U8", SelRow);
 	printf("\nRow [" __ZU__ "] of Table T_U8 has [" __ZU__ "] columns\n", SelRow, (size_t)C0);
 	
 	// After TestMaxR table, no more errors should exist in the following test.
 	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
-	
+#ifdef __CCEXP__USE_MVECTOR
+	printf("[%s: %i]: #6 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
+#endif
 	
 	
 	// Test Cols Error handling... (Wrong SelRow)
@@ -134,7 +153,10 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	SelRow = 512; C0 = CCEXP::Cols(DBG, "T_UU88", SelRow);
 printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
-	
+#ifdef __CCEXP__USE_MVECTOR
+	printf("\n");
+	printf("[%s: %i]: #7 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
+#endif
 	
 	delete[] pU8;
 	delete[] pF32;
@@ -150,7 +172,9 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	for (int i=0; i < 3; i++) CCEXP::AddVal(DBG,"AddVal",i);
 	CCEXP::DeleteLastRow(DBG,"AddVal");
 	for (int i=5; i < 8; i++) CCEXP::AddVal(DBG,"AddVal",i);
-
+#ifdef __CCEXP__USE_MVECTOR
+	printf("[%s: %i]: #8 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
+#endif
 
 	// Test "DeleteRow"
 	for (int i=0; i < 10; i++) {
@@ -168,7 +192,9 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	CCEXP::DeleteLastElement(DBG,"DeleteLastElement",1);
 	CCEXP::DeleteLastElement(DBG,"DeleteLastElement",1);
 	CCEXP::DeleteLastElement(DBG,"DeleteLastElement",1);
-		
+#ifdef __CCEXP__USE_MVECTOR
+	printf("[%s: %i]: #9 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
+#endif
 	
 	// Test "AppendRow"
 	for (int j=0; j < 3; j++) {
@@ -221,15 +247,18 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	
 	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
 	
+
 #ifdef __CCEXP__USE_MVECTOR
-	MVECTOR<char> Mem;
-	printf("--- MVECTOR Size before Reset: " __ZU__ " bytes. \n", Mem.total_bytes());
+	printf("[%s: %i]: #10 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
 #endif
-	
 	// Store all DBG data. This will clear the data of all Tables,
 	// but will not remove the tables; you can re-add new data.
     CCEXP::StoreData(DBG);
-	
+
+#ifdef __CCEXP__USE_MVECTOR
+	printf("\n\n\n");
+	printf("--- MVECTOR Size before Reset: " __ZU__ " bytes. \n", Mem.total_bytes());
+#endif
 	// Reset the DBG object. Everything is cleared. Need to Initialize
 	// again in order to use it again!
 	CCEXP::Reset(DBG);
