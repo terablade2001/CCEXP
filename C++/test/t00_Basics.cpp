@@ -41,7 +41,7 @@
 // Define a CCEXP object (DBG)
 static CCEXP::CCEXP DBG;
 
-int t00_Basics() {
+int t00_Basics(void* mv_) {
 #ifdef __CCEXP__USE_MVECTOR
 	MVECTOR<char> Mem;
 #endif
@@ -267,6 +267,11 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	printf("--- MVECTOR Size after Reset: " __ZU__ " bytes. \n", Mem.total_bytes());
 #endif
 	
-	printf("\n... Program End ...\n");
+	printf("\n... t00_Basics() call ending ...\n");
+#ifdef __CCEXP__USE_MVECTOR
+	printf("[%s: %i]: Main(): Total MVECTOR Bytes before t00_Basics() returns: " __ZU__ "\n",
+		__FNAME__,__LINE__, ((MVECTOR<char>*)mv_)->total_bytes()
+	);
+#endif
 	return 0;
 }

@@ -41,7 +41,7 @@
 #define __USE_MVECTOR_NAMESPACE__ //..
 #define __CCEXP_VECTOR_CLEAR(v) (v).clear(); (v).resize(0);
 #else
-#include "../../MVECTOR/include/MVECTOR.hpp"
+#include "../../../sub_modules/MVECTOR/src/include/MVECTOR.hpp"
 #define __USE_MVECTOR_NAMESPACE__ using namespace ns_MVECTOR;
 #define __CCEXP_VECTOR_CLEAR(v) (v).clear();
 #endif
@@ -64,7 +64,7 @@ definition which can change depending the compiler.
 	#define __ZU__ "%zu"
 #endif
 
-#define CCEXP_VERSION (0.063)
+#define CCEXP_VERSION (0.064)
 #define TRACK_ANALYTIC_ERRORS
 
 #ifndef __FNAME__

@@ -26,9 +26,13 @@
 
 __USE_MVECTOR_NAMESPACE__
 
-int t00_Basics();
-int t01_Threads();
+int t00_Basics(void* mv_);
+int t01_Load(void* mv_);
+int t02_ExternalWriteLoad(void* mv_);
 
+#ifdef __CCEXP__USE_MVECTOR
+	MVECTOR<char> MainMem;
+#endif
 int main(int argc, char **argv) {
 	int RunTest = -1;
 	if (argc  < 2)
@@ -37,8 +41,9 @@ int main(int argc, char **argv) {
 			"2) CCEXP t01\n"
 		);
 	for(int i = 1; i < argc; i++ ) {
-				 if( !strcmp( argv[i], "t00"  )) RunTest = 0;
-		// else if( !strcmp( argv[i], "t01" )) RunTest = 1;
+				 if( !strcmp( argv[i], "t00" )) RunTest = 0;
+		else if( !strcmp( argv[i], "t01" )) RunTest = 1;
+		else if( !strcmp( argv[i], "t02" )) RunTest = 2;
 		else { int ii=i-1;
 			printf("Error >> Unrecognized command: [%s %s].\n"
 				"Please check the commands syntax (append option: [-help]).\n"
@@ -48,8 +53,14 @@ int main(int argc, char **argv) {
 		}
 	}
 
-			 if (RunTest == 0) t00_Basics();
-	// else if (RunTest == 1) t01_Threads();
+			 if (RunTest == 0) t00_Basics((void*)&MainMem);
+	else if (RunTest == 1) t01_Load((void*)&MainMem);
+	else if (RunTest == 2) t02_ExternalWriteLoad((void*)&MainMem);
 
+#ifdef __CCEXP__USE_MVECTOR
+	printf("[%s: %i]: Main(): Total MVECTOR Bytes main() exits: " __ZU__ "\n",
+		__FNAME__,__LINE__, MainMem.total_bytes()
+	);
+#endif
 	return 0;
 }

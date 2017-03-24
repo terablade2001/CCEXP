@@ -39,7 +39,10 @@
 #endif
 
 
-int main(int argc, char **argv) {
+int t01_Load(void* mv_) {
+#ifdef __CCEXP__USE_MVECTOR
+	MVECTOR<char> Mem;
+#endif
 	// 1. Create a file
 	//{ >>>>>>>:: Create a file and store it ::<<<<<<<
         CCEXP::CCEXP DBG("DataFile.ccexp");
@@ -54,7 +57,9 @@ int main(int argc, char **argv) {
 		CCEXP::AddTable <int16_t>(DBG,"Table_i16","int16");
 		CCEXP::AddTable <size_t>(DBG,"Table_st","uint64");
 		_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
-		
+#ifdef __CCEXP__USE_MVECTOR
+	printf("[%s: %i]: #1 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
+#endif
 		for (int j=0; j < 10; j++) {
 			for (int i = 0; i < 3; i++) {
 				CCEXP::AddVal(DBG,"Table_u8",   (uint8_t)(j*3+i));
@@ -75,10 +80,16 @@ int main(int argc, char **argv) {
 			CCEXP::NewRow(DBG,"Table_st");
 		}
 		_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+#ifdef __CCEXP__USE_MVECTOR
+	printf("[%s: %i]: #2 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
+#endif
 
 		CCEXP::StoreData(DBG);
 		CCEXP::Reset(DBG);
 		_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+#ifdef __CCEXP__USE_MVECTOR
+	printf("[%s: %i]: #3 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
+#endif
 	//}
 	
 	//{ >>>>>>>:: Part #2 LD is a loading object ::<<<<<<<	
@@ -90,10 +101,14 @@ int main(int argc, char **argv) {
 		// *** All CCEXP object should be initialized first!
 		CCEXP::Initialize(LD,"Output.bdat");
 		// Ignoring the initialization, will yield a lot of errors!
-		
+#ifdef __CCEXP__USE_MVECTOR
+	printf("[%s: %i]: #4 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
+#endif
 		CCEXP::Open(LD,"DataFile.ccexp");
 			CCEXP::LoadTable<uint8_t>(LD,"Table_u8","uint8");
-			
+#ifdef __CCEXP__USE_MVECTOR
+	printf("[%s: %i]: #5 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
+#endif
 			// Test Loading the same table twice
 			CCEXP::LoadTable<uint8_t>(LD,"Table_u8","uint8");
 printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
@@ -113,7 +128,10 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 			_DBG_ERROR_STOP_OR_CONTINUE_(LD);
 		CCEXP::Close(LD);
 		_DBG_ERROR_STOP_OR_CONTINUE_(LD);
-		
+#ifdef __CCEXP__USE_MVECTOR
+	printf("[%s: %i]: #6 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
+#endif
+
 		size_t NTables = CCEXP::NumberOfTables(LD);
 		size_t rows;
 		char* TableName;
@@ -124,7 +142,9 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 			printf("[%s: %i]: Table " __ZU__ " --> %s with (" __ZU__ ")rows\n",__FNAME__,__LINE__, i, TableName, rows);
 		}
 	//}
-	
+#ifdef __CCEXP__USE_MVECTOR
+	printf("[%s: %i]: #7 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
+#endif
 	
 	
 	
@@ -198,7 +218,7 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	//   the 3 data was add at the end of row 8. (DBG object)
 	// 2 data when later on at LD object I tried to add 2 new rows which also
 	//   failed due to the _maxRows = 9 restriction.
-	MVECTOR::MVECTOR<float>* fv = CCEXP::getRow<float>(LD,"Table_float",8);
+	MVECTOR<float>* fv = CCEXP::getRow<float>(LD,"Table_float",8);
 	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
 	if (fv != NULL) {
 		printf("\n\nTable_float, Row=8 values:\n >> ");
@@ -227,7 +247,15 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 		for (size_t i = 0; i < cols; i++)	printf("%2.3f ",f[i]);
 		printf("\n");
 	} else printf("[%s: %i]: ERROR:: f = NULL!\n",__FNAME__,__LINE__);
-	
-	printf("\n... Program End ...\n");
+#ifdef __CCEXP__USE_MVECTOR
+	printf("[%s: %i]: #8 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
+#endif
+
+	printf("\n... t01_Load() call ending ...\n");
+#ifdef __CCEXP__USE_MVECTOR
+	printf("[%s: %i]: Main(): Total MVECTOR Bytes before t01_Load() returns: " __ZU__ "\n",
+		__FNAME__,__LINE__, ((MVECTOR<char>*)mv_)->total_bytes()
+	);
+#endif
 	return 0;
 }

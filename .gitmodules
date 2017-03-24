@@ -1,0 +1,3 @@
+[submodule "sub_modules/MVECTOR"]
+	path = sub_modules/MVECTOR
+	url = https://github.com/terablade2001/MVECTOR.git

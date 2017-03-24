@@ -25,6 +25,8 @@ set (CXX_SRCS
     ${CMAKE_CURRENT_LIST_DIR}/C++/src/CCEXP.cpp
     ${CMAKE_CURRENT_LIST_DIR}/C++/test/main.cpp
     ${CMAKE_CURRENT_LIST_DIR}/C++/test/t00_Basics.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/C++/test/t01_Load.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/C++/test/t02_ExternalWriteLoad.cpp
 )
 
 if(LIB__MVECTOR)
@@ -32,17 +34,16 @@ if(LIB__MVECTOR)
 	message("####################################################################")
 	message("#############     Using also MVECTOR library     ###################")
 	message("####################################################################")
-	message("  -> Download MVECTOR from https://github.com/terablade2001/MVECTOR")
-	message("  and place MVECTOR.hpp and MVECTOR.cpp files at folders:")
-	message("     * MVECTOR.hpp: ${CMAKE_CURRENT_LIST_DIR}/C++/MVECTOR/include/MVECTOR.hpp")
-	message("     * MVECTOR.cpp: ${CMAKE_CURRENT_LIST_DIR}/C++/MVECTOR/MVECTOR.cpp")
+	message("  -> Clone Recusive: git clone --recursive https://github.com/terablade2001/CCEXP")
+	message("  -> Or update submodules: git submodule init")
+	message("                           git submodule update")	
 	message("####################################################################")
 	message("####################################################################")
 	message("####################################################################")
 	message("")
 	set (CXX_SRCS ${CXX_SRCS}
-		${CMAKE_CURRENT_LIST_DIR}/C++/MVECTOR/include/MVECTOR.hpp
-		${CMAKE_CURRENT_LIST_DIR}/C++/MVECTOR/MVECTOR.cpp
+		${CMAKE_CURRENT_LIST_DIR}/sub_modules/MVECTOR/src/include/MVECTOR.hpp
+		${CMAKE_CURRENT_LIST_DIR}/sub_modules/MVECTOR/src/MVECTOR.cpp
 	)
 endif(LIB__MVECTOR)
 		

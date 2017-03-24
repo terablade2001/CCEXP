@@ -38,17 +38,24 @@
 		__CCEXP_ERR_DISPLAY((x),-1); CCEXP::DBG_SetStatus((x), 1);
 #endif
 
-int main(int argc, char **argv) {
+int t02_ExternalWriteLoad(void* mv_) {
+#ifdef __CCEXP__USE_MVECTOR
+	MVECTOR<char> Mem;
+#endif
 	// Load a Binary file which created with external software (i.e. Python, MatLab(Octave) etc)
 	CCEXP::CCEXP LD;
-    
-	// CCEXP::Initialize(LD,"nofile.ccexp");
+#ifdef __CCEXP__USE_MVECTOR
+	printf("[%s: %i]: #1 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
+#endif
+
 	CCEXP::Open(LD,"SharedData.ccexp");
 		CCEXP::LoadTable<float>(LD,"Table_1","single");
 		CCEXP::LoadTable<uint8_t>(LD,"Table_2","uint8");
 	CCEXP::Close(LD);
 	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
-
+#ifdef __CCEXP__USE_MVECTOR
+	printf("[%s: %i]: #2 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
+#endif
 	size_t Rows_1 = CCEXP::Rows(LD, "Table_1");
 	size_t Rows_2 = CCEXP::Rows(LD, "Table_2");
 	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
@@ -85,5 +92,11 @@ int main(int argc, char **argv) {
 
 	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
 
+	printf("\n... t02_ExternalWriteLoad() call ending ...\n");
+#ifdef __CCEXP__USE_MVECTOR
+	printf("[%s: %i]: Main(): Total MVECTOR Bytes before t02_ExternalWriteLoad() returns: " __ZU__ "\n",
+		__FNAME__,__LINE__, ((MVECTOR<char>*)mv_)->total_bytes()
+	);
+#endif
 	return 0;
 }
