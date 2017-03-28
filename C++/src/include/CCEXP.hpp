@@ -24,6 +24,8 @@
 #ifndef __CCEXP_HPP__
 #define __CCEXP_HPP__
 
+#define CCEXP_VERSION (0.065)
+
 #define __CCEXP__USE_MVECTOR
 // MVECTOR can be downloaded from https://github.com/terablade2001/MVECTOR
 
@@ -64,7 +66,7 @@ definition which can change depending the compiler.
 	#define __ZU__ "%zu"
 #endif
 
-#define CCEXP_VERSION (0.064)
+
 #define TRACK_ANALYTIC_ERRORS
 
 #ifndef __FNAME__
@@ -641,8 +643,6 @@ template<class T> inline void LoadTable(CCEXP &obj, const char* name, const char
 		}
 	}
 	
-	if (obj.LoadTableIndex >= obj.LoadTotalTables) obj.LoadTableIndex = 0;
-	
 	// If the Table hot not been found, then abort with error.
 	if(!TableFound) {
 		fseek(lfp, LastTablePosByte, SEEK_SET);
@@ -675,6 +675,12 @@ template<class T> inline void LoadTable(CCEXP &obj, const char* name, const char
 	// Warning: newRowFlag should be set to false, thus use to be able
 	// add data directly to the end of the last row if he want.
 	U->NoNewRow();
+
+	if (obj.LoadTableIndex >= obj.LoadTotalTables) {
+		obj.LoadTableIndex = 0;
+		fseek(lfp, sizeof(uint32_t) + sizeof(uint64_t), SEEK_SET);
+	}
+
 	obj.Status = CCEXPORTMAT_READY;
 }
 
