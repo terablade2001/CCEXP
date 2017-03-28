@@ -10,6 +10,9 @@ project(CCEXP)
 if (MINGW)
 	set(CXX_FLAGS "-std=c++11 -Wall")
 endif(MINGW)
+if (UNIX)
+	set(CXX_FLAGS "-std=c++11 -Wall -Wno-unused-result")
+endif(UNIX)
 
 set(LIB__MVECTOR ON)
 
