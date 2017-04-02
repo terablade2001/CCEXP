@@ -1,6 +1,6 @@
 // MIT License
 
-// Copyright (c) 2016 Vasileios Kon. Pothos (terablade2001)
+// Copyright (c) 2016 - 2017 Vasileios Kon. Pothos (terablade2001)
 // https://github.com/terablade2001/CCEXP
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,6 +24,8 @@
 #include "include/CCEXP.hpp"
 
 using namespace std;
+__USE_MVECTOR_NAMESPACE__
+
 namespace CCEXP {
 
 CCEXP::CCEXP() :
@@ -370,7 +372,7 @@ void Reset(CCEXP &obj) {
 
 size_t GetErrors(
 	CCEXP &obj,
-	vector<string>* &ptrError
+	MVECTOR<string>* &ptrError
 ) {
 	// This function should not change CCEXP object status. Thus if a critical
 	// error occurs, then all the CCEXP object should be disabled (status errors

@@ -1,5 +1,15 @@
 # CCEXP
 
+You can clone CCEXP with MVECTOR:
+```
+git clone --recursive https://github.com/terablade2001/CCEXP.git
+```
+or use MVECTOR later if need:
+```
+git submodule init
+git submodule update
+```
+
 ## CCEXP Presentation
 You can take a look at **CCEPX presentation video** at [this vimeo link](https://vimeo.com/188399861)!
 
@@ -137,4 +147,31 @@ for (size_t r = 0; r < CCEXP::Rows(LD, "Table_2"); r++) {
 		if (v1 != NULL) printf("%u ", v1);
 	}
 }
+```
+
+# CCEXP and MVECTOR
+
+CCEXP is now based on the MVECTOR library, as std::vector library may or may not work the same in all libraries.  
+MVECTOR library also can track allocated memory. More info about MVECTOR can be found here:  
+https://github.com/terablade2001/MVECTOR.git
+
+## Build with CMAKE
+
+You can clone CCEXP with MVECTOR:
+```
+git clone --recursive https://github.com/terablade2001/CCEXP.git
+```
+
+Then build like:
+```
+mkdir build && cd build
+cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release ..
+make
+# Test t00_Basics.cpp
+cls && CCEXP t00
+# Test t01_Load.cpp
+cls && CCEXP t01
+# Test t02_ExternalWriteLoad.cpp
+# (First create SharedData.ccexp with /MATLAB/test/t02_ExternalWriteLoad.m file)
+cls && CCEXP t02
 ```
