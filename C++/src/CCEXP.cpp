@@ -93,8 +93,8 @@ void Initialize(CCEXP &obj, const char* fname, const char* Path, bool isactive) 
 	obj.Status = CCEXPORTMAT_ACTIVE;
 	if (prevStatus != CCEXPORTMAT_INIT) CCEXP_ERR_V(obj , ERROR::StatusNotInit , "Initialize():: CCEXP object with name [%s] has wrong status. Confirm you have reset it first." , fname );
 	if (fname == NULL) CCEXP_ERR_V(obj, ERROR::IO_Error , "Initialize():: Export Filename is NULL! (!%u!)", 0);
-	if (Path == NULL) snprintf(obj.SavingFile,64,"%s",fname);
-	else snprintf(obj.SavingFile,64,"%s/%s", Path, fname);
+	if (Path == NULL) snprintf(obj.SavingFile,256,"%s",fname);
+	else snprintf(obj.SavingFile,256,"%s/%s", Path, fname);
 	obj.Status = CCEXPORTMAT_READY;
 }
 
