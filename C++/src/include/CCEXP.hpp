@@ -24,7 +24,7 @@
 #ifndef __CCEXP_HPP__
 #define __CCEXP_HPP__
 
-#define CCEXP_VERSION (0.065)
+#define CCEXP_VERSION (0.066)
 
 #define __CCEXP__USE_MVECTOR
 // MVECTOR can be downloaded from https://github.com/terablade2001/MVECTOR
