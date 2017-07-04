@@ -175,3 +175,37 @@ cls && CCEXP t01
 # (First create SharedData.ccexp with /MATLAB/test/t02_ExternalWriteLoad.m file)
 cls && CCEXP t02
 ```
+
+# CCEXPViewer
+
+Using CCEXP Version 0.068, users can find at the folder 
+/`C++/test/CCEXPViewer/` a simple C++ demo example which creates an .exe to 
+display .ccexp files data. The code is given here too.  
+The macro `__CCEXP_PRINT_TABLES__` is just an example macro on how to use 
+the new Analyze() functions of CCEXP.
+```C++
+#include "../../src/include/CCEXP.hpp"
+
+int main(int argc, char** argv) {
+	if (argc != 2) {
+		printf("Please provide a filename\n");
+		return -1;
+	}
+
+	printf("\n-------------------------------------------------------------\n");
+	printf("CCEXP Library (%1.3f): "
+				 "https://github.com/terablade2001/CCEXP\n",
+				 CCEXP_VERSION
+	);
+	printf("------- CCEXP Viewer >> [%s] ------------\n", argv[1]);
+	__CCEXP_PRINT_TABLES__(argv[1]);
+	printf("-------------------------------------------------------------\n\n");
+
+	return 0;
+}
+```
+
+# CCEXPGet
+
+CCEXPGet example is a tool, that can be modified/compiled and used directly to 
+extract rows of CCEXP arrays from command-line.

@@ -231,7 +231,6 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	TableID = CCEXP::getTableID(DBG,"DeleteLastElement"); CCEXP::AddVal(DBG,"getTableID",TableID);
 	TableID = CCEXP::getTableID(DBG,"SetVal");            CCEXP::AddVal(DBG,"getTableID",TableID);
 	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
-
 	
 	// Test "getTableName"
 	printf("\n\n");
@@ -242,11 +241,13 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	printf("Table Name of Table with ID (%i) is: %s\n", 5, TableName);
 	TableName = CCEXP::getTableName(DBG,8);
 	printf("Table Name of Table with ID (%i) is: %s\n", 8, TableName);
-	
-	
-	
 	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
 	
+	// Display DBG tables
+	printf("\n---------- Display DBG object's tables: ------------------------\n");
+	__CCEXP_PRINT_TABLES__(DBG)
+	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+	printf("----------------------------------------------------------------\n\n");
 
 #ifdef __CCEXP__USE_MVECTOR
 	printf("[%s: %i]: #10 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
@@ -273,5 +274,12 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 		__FNAME__,__LINE__, ((MVECTOR<char>*)mv_)->total_bytes()
 	);
 #endif
+
+	// Display DBG tables
+	printf("\n---------- Display DataFile.ccexp tables: ----------------------\n");
+	__CCEXP_PRINT_TABLES__("DataFile.ccexp")
+	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+	printf("----------------------------------------------------------------\n\n");
+
 	return 0;
 }

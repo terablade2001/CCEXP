@@ -24,7 +24,7 @@
 #ifndef __CCEXP_HPP__
 #define __CCEXP_HPP__
 
-#define CCEXP_VERSION (0.066)
+#define CCEXP_VERSION (0.068)
 
 #define __CCEXP__USE_MVECTOR
 // MVECTOR can be downloaded from https://github.com/terablade2001/MVECTOR
@@ -38,14 +38,16 @@
 #include <limits>
 #include <iostream>
 #ifndef __CCEXP__USE_MVECTOR
-#include <vector>
-#define MVECTOR vector
-#define __USE_MVECTOR_NAMESPACE__ //..
-#define __CCEXP_VECTOR_CLEAR(v) (v).clear(); (v).resize(0);
+	#include <vector>
+	#define MVECTOR vector
+	#define __USE_MVECTOR_NAMESPACE__ //..
+	#define __CCEXP_VECTOR_STEPS(v,a,b) //..
+	#define __CCEXP_VECTOR_CLEAR(v) (v).clear(); (v).resize(0);
 #else
-#include "../../../sub_modules/MVECTOR/src/include/MVECTOR.hpp"
-#define __USE_MVECTOR_NAMESPACE__ using namespace ns_MVECTOR;
-#define __CCEXP_VECTOR_CLEAR(v) (v).clear();
+	#include "../../../sub_modules/MVECTOR/src/include/MVECTOR.hpp"
+	#define __USE_MVECTOR_NAMESPACE__ using namespace ns_MVECTOR;
+	#define __CCEXP_VECTOR_STEPS(v,a,b) (v).set_steps((a),(b));
+	#define __CCEXP_VECTOR_CLEAR(v) (v).clear();
 #endif
 
 
@@ -59,11 +61,13 @@ definition which can change depending the compiler.
 	#define snprintf _snprintf_s
 	#define __CCEXP_FOPEN__(fp, fname, mode) fopen_s(&fp, fname, mode)
 	#define __ZU__ "%Iu"
+	#define __ZUn_ "Iu"
 	#include <algorithm>
 #endif
 #ifndef _MSC_VER
 	#define __CCEXP_FOPEN__(fp, fname, mode) fp = fopen(fname, mode)
 	#define __ZU__ "%zu"
+	#define __ZUn_ "zu"
 #endif
 
 
@@ -166,6 +170,15 @@ definition which can change depending the compiler.
 	#endif
 #endif
 
+#define __CCEXP_PRINT_TABLES__(v) {\
+		MVECTOR<MVECTOR<char>> DBG_Tables;\
+		CCEXP::Analyze((v), DBG_Tables);\
+		for (size_t i = 0; i < DBG_Tables.size(); i++) {\
+			printf("%s\n",DBG_Tables[i].data());\
+		}\
+	}
+
+
 using namespace std;
 __USE_MVECTOR_NAMESPACE__
 
@@ -206,6 +219,7 @@ class CCEXPBase {
 	virtual int DeleteRow(size_t row) = 0;
 	virtual int DeleteLastElement(size_t row) = 0;
 	virtual char* getName(void) = 0;
+	virtual char* getType(void) = 0;
 	virtual int StoreData(FILE *fp) = 0;
 	virtual int Reset(void) = 0;
 };
@@ -238,6 +252,7 @@ class CCEXPMat : public CCEXPBase {
 		int DeleteRow(size_t row);
 		int DeleteLastElement(size_t row);
 		char* getName(void);
+		char* getType(void);
 		int StoreData(FILE* fp);
 		int Reset(void);
 
@@ -465,6 +480,8 @@ template<class T> int CCEXPMat<T>::DeleteLastElement(size_t row) {
 
 template<class T> char* CCEXPMat<T>::getName(void) { return name; }
 
+template<class T> char* CCEXPMat<T>::getType(void) { return type; }
+
 template<class T> int CCEXPMat<T>::StoreData(FILE* fp) {
 	if (IgnoreM) return 0;
 	if (fp == NULL) CCEXP_ERR(*__parent, ERROR::IO_Error , "CCEXPMat::StoreData():: File pointer is NULL! (!%u!)", 0);
@@ -509,7 +526,6 @@ template<class T> int CCEXPMat<T>::Reset(void) {
 
 
 
-
 //@#| ############### CCEXP API Functions ###############
 //@#: ############### .CPP file ###############
 void	Initialize(CCEXP &obj, const char* fname, const char* Path = NULL, bool isactive = true);
@@ -539,6 +555,8 @@ void	CleanTable(CCEXP &obj, size_t sel);
 size_t	GetErrors(CCEXP &obj, MVECTOR<string>* &ptrError);
 size_t	NumberOfTables(CCEXP &obj);
 void	DBG_SetStatus(CCEXP &obj, int status);
+int Analyze(CCEXP &obj, MVECTOR<MVECTOR<char>> &v);
+int Analyze(const char* filename, MVECTOR<MVECTOR<char>> &v, int flag = 0);
 
 //@#: ############### Templates API Functions ###############
 template<class T> inline void AddTable (

@@ -39,6 +39,7 @@ int main(int argc, char **argv) {
 		printf("Please use one of the following:\n"
 			"1) CCEXP t00\n"
 			"2) CCEXP t01\n"
+			"3) CCEXP t02\n"
 		);
 	for(int i = 1; i < argc; i++ ) {
 				 if( !strcmp( argv[i], "t00" )) RunTest = 0;

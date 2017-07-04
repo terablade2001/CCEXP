@@ -432,4 +432,97 @@ void Close(CCEXP &obj) {
 	return;
 }
 
+int Analyze(CCEXP &obj, MVECTOR<MVECTOR<char>> &v) {
+	__CCEXP_VECTOR_CLEAR(v);
+	__CCEXP_VECTOR_STEPS(v,1,1);
+	size_t NTables = obj.M.size();
+	v.cresize(NTables);
+	for (size_t i = 0; i < NTables; i++) {
+		__CCEXP_VECTOR_STEPS(v[i],1,1);
+		v[i].cresize(260,0);
+		size_t rows = Rows(obj, i);
+		if (rows == 1) {
+			size_t cols = Cols(obj, i, 0);
+			snprintf(v[i].data(), 256,
+				"[%3.1" __ZUn_ "]> [1x %5.0" __ZUn_ " ] [%i] :: (%s): %s",
+				i, cols, 1-(int)(obj.M[i])->getIgnoreStatus(),
+				(obj.M[i])->getType(), obj.M[i]->getName()
+			);
+		} else {
+			snprintf(v[i].data(), 256,
+				"[%3.1" __ZUn_ "]> [%5.0" __ZUn_ " {} ] [%i] :: (%s): %s",
+				i, rows, 1-(int)(obj.M[i])->getIgnoreStatus(),
+				(obj.M[i])->getType(), obj.M[i]->getName()
+			);
+		}
+	}
+	return 0;
+}
+
+int Analyze(const char* filename, MVECTOR<MVECTOR<char>> &v, int flag) {
+	if (filename == NULL) { return -1; }
+
+	FILE* lfp;
+	__CCEXP_FOPEN__(lfp, filename, "rb");
+	if (lfp == NULL) { return -1; }
+
+	uint32_t LoadSTBytes;
+	fread(&LoadSTBytes, sizeof(uint32_t), 1, lfp);
+	if (LoadSTBytes != sizeof(uint64_t)) { fclose(lfp); return -1; }
+
+	uint64_t LoadTotalTables;
+	fread(&LoadTotalTables, sizeof(uint64_t), 1, lfp);
+
+	char loadName[65]={0};
+	char loadType[65]={0};
+	uint64_t typeSize=0;
+	uint64_t N=0;
+	uint64_t MaxRows=0;
+
+	__CCEXP_VECTOR_CLEAR(v);
+	__CCEXP_VECTOR_STEPS(v,1,1);
+	v.cresize(LoadTotalTables);
+	MVECTOR<uint64_t> DPL;
+	__CCEXP_VECTOR_STEPS(DPL,1,1);
+	for (uint64_t i = 0; i < (uint64_t)LoadTotalTables; i++) {
+		v[i].cresize(260,0);
+
+		fread(loadName, sizeof(char), 64, lfp);
+		fread(loadType, sizeof(char), 64, lfp);
+		fread(&typeSize, sizeof(uint64_t), 1, lfp);
+		fread(&N, sizeof(uint64_t), 1, lfp);
+		fread(&MaxRows, sizeof(uint64_t), 1, lfp);
+		if (N > MaxRows) N = MaxRows;
+		DPL.resize(N);
+		fread(DPL.data(), sizeof(uint64_t), N, lfp);
+		uint64_t TableBytes = 0;
+		for (uint64_t c = 0; c < N; c++)
+			TableBytes += DPL[c]*typeSize;
+		fseek(lfp, TableBytes, SEEK_CUR);
+
+		if (flag == 0) {
+			if (N > 1) {
+				snprintf(v[i].data(), 256,
+					"[%3.1" __ZUn_ "]> [%5.0" __ZUn_ " {} ] [%i] :: (%s): %s",
+					(size_t)i, (size_t)N, 1,
+					loadType, loadName
+				);
+			} else {
+				if (N > 0) N = DPL[0];
+				snprintf(v[i].data(), 256,
+					"[%3.1" __ZUn_ "]> [1x %5.0" __ZUn_ " ] [%i] :: (%s): %s",
+					(size_t)i, (size_t)N, 1,
+					loadType, loadName
+				);
+			}
+		} else if (flag == 1) {
+			snprintf(v[i].data(), 256, "%s", loadName);
+		} else if (flag == 2) {
+			snprintf(v[i].data(), 256, "%s", loadType);
+		}
+	}
+	fclose(lfp);
+	return 0;
+}
+
 }; // namespace CCEXP;
