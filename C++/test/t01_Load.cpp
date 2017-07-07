@@ -111,7 +111,6 @@ int t01_Load(void* mv_) {
 #endif
 			// Test Loading the same table twice
 			CCEXP::LoadTable<uint8_t>(LD,"Table_u8","uint8");
-printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 			_DBG_ERROR_STOP_OR_CONTINUE_(LD);
 
 			// Test Loading wrong table format

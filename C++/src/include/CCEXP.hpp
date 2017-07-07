@@ -24,7 +24,7 @@
 #ifndef __CCEXP_HPP__
 #define __CCEXP_HPP__
 
-#define CCEXP_VERSION (0.069)
+#define CCEXP_VERSION (0.070)
 
 #define __CCEXP__USE_MVECTOR
 // MVECTOR can be downloaded from https://github.com/terablade2001/MVECTOR
@@ -554,7 +554,7 @@ void	Reset(CCEXP &obj);
 void	CleanTable(CCEXP &obj, const char* matname);
 void	CleanTable(CCEXP &obj, size_t sel);
 size_t	GetErrors(CCEXP &obj, MVECTOR<string>* &ptrError);
-char*	GetErrors(CCEXP &obj);
+char*	GetErrors(CCEXP &obj, size_t &rows);
 size_t	NumberOfTables(CCEXP &obj);
 void	DBG_SetStatus(CCEXP &obj, int status);
 int Analyze(CCEXP &obj, MVECTOR<MVECTOR<char>> &v);
@@ -607,8 +607,6 @@ template<class T> inline void LoadTable(CCEXP &obj, const char* name, const char
 	int prevStatus = obj.Status;
 	// If any error occurs, then it should be critical error!
 	obj.Status = CCEXPORTMAT_ACTIVE;
-	if (obj.checkDuplicatedNames(name) > 0)
-		CCEXP_ERR_V(obj , ERROR::DublicatedTable , "LoadTable():: Table [%s] already exist in CCEXP object!", name);
 	if ((prevStatus != CCEXPORTMAT_INIT) && (prevStatus != CCEXPORTMAT_READY))
 		CCEXP_ERR_V(obj , ERROR::StatusIsWrong , "LoadTable():: CCEXP object has wrong status! (!%u!)", 0);
 	FILE* lfp = obj.lfp;
@@ -675,9 +673,18 @@ template<class T> inline void LoadTable(CCEXP &obj, const char* name, const char
 		CCEXP_ERR_V(obj, ERROR::IO_Error, "LoadTable():: Table [%s] is of \"%s\" type, while requested LoadTable is of \"%s\" type!", name, loadType, type);
 	}
 
-	// Create a new Table...
-	obj.M.push_back(shared_ptr<CCEXPBase>((CCEXPBase*) new CCEXPMat<T>));
-	CCEXPMat<T>* U = static_cast<CCEXPMat<T>*>(obj.M[obj.M.size()-1].get());
+	CCEXPMat<T> *U;
+	if (obj.checkDuplicatedNames(name) > 0) { // If the table already exist!
+		size_t idx = obj.getTableIndexByName(name);
+		U = static_cast<CCEXPMat<T>*>(obj.M[idx].get());
+		U->Reset();
+	}
+	else
+	{// If the table does not exist create a new Table...
+		obj.M.push_back(shared_ptr<CCEXPBase>((CCEXPBase*) new CCEXPMat<T>));
+		U = static_cast<CCEXPMat<T>*>(obj.M[obj.M.size()-1].get());
+	}
+
 	int ret = U->Initialize(loadName, loadType, MaxRows, &obj);
 	if (ret != 0) CCEXP_ERR_V(obj, ret, "LoadTable():: Internal error occured while copying Table [%s] from an opened file!", name);
 	// Copy data from file to the new table.
@@ -695,7 +702,7 @@ template<class T> inline void LoadTable(CCEXP &obj, const char* name, const char
 	// Warning: newRowFlag should be set to false, thus use to be able
 	// add data directly to the end of the last row if he want.
 	U->NoNewRow();
-
+	
 	if (obj.LoadTableIndex >= obj.LoadTotalTables) {
 		obj.LoadTableIndex = 0;
 		fseek(lfp, sizeof(uint32_t) + sizeof(uint64_t), SEEK_SET);

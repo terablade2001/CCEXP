@@ -369,6 +369,7 @@ void Reset(CCEXP &obj) {
 	obj.LoadTotalTables = 0;
 	obj.LoadTableIndex  = 0 ;
 	obj.Status = CCEXPORTMAT_INIT;
+	obj.errorchar.clear();
 	return;
 }
 
@@ -386,8 +387,9 @@ size_t GetErrors(
 	return NumberOfErrors;
 }
 
-char*	GetErrors(CCEXP &obj) {
+char*	GetErrors(CCEXP &obj, size_t &rows) {
 	size_t NumberOfErrors = obj.Errors.size();
+	rows = NumberOfErrors;
 	obj.errorchar.resize(CCEXP_MAX_ERRORCHAR_SIZE+1);
 	obj.errorchar[0] = 0; obj.errorchar[1] = 0;
 	if (NumberOfErrors == 0) {
