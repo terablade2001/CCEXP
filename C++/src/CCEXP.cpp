@@ -40,7 +40,9 @@ CCEXP::CCEXP() :
 { 
 	SavingFile[0]=0;
 	SavingFile[1]=0;
+	__CCEXP_VECTOR_STEPS(errorchar,1,1);
 	__CCEXP_VECTOR_CLEAR(Errors);
+	errorchar.clear();
 }
 
 CCEXP::CCEXP(const char* fname):
@@ -54,9 +56,9 @@ CCEXP::CCEXP(const char* fname):
 	LoadTableIndex(0)
 {
 	SavingFile[0]=0;
-	SavingFile[1]=0;	
+	SavingFile[1]=0;
 	__CCEXP_VECTOR_CLEAR(Errors);
-	
+
 	Initialize(*this, fname);
 }
 
@@ -382,6 +384,26 @@ size_t GetErrors(
 	size_t NumberOfErrors = obj.Errors.size();
 	ptrError = &(obj.Errors);
 	return NumberOfErrors;
+}
+
+char*	GetErrors(CCEXP &obj) {
+	size_t NumberOfErrors = obj.Errors.size();
+	obj.errorchar.resize(CCEXP_MAX_ERRORCHAR_SIZE+1);
+	obj.errorchar[0] = 0; obj.errorchar[1] = 0;
+	if (NumberOfErrors == 0) {
+		sprintf(obj.errorchar.data(),"CCEXP 0 Errors");
+	} else {
+		sprintf(obj.errorchar.data(),"------- CCEXP " __ZU__ " Errors -------",
+			NumberOfErrors
+		);
+		for (size_t i = 0; i < NumberOfErrors; i++) {
+			snprintf(
+				obj.errorchar.data(), CCEXP_MAX_ERRORCHAR_SIZE, "%s\n%s",
+				obj.errorchar.data(), obj.Errors[i].c_str()
+			);
+		}
+	}
+	return obj.errorchar.data();
 }
 
 size_t NumberOfTables(CCEXP &obj) {

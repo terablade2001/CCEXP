@@ -24,7 +24,7 @@
 #ifndef __CCEXP_HPP__
 #define __CCEXP_HPP__
 
-#define CCEXP_VERSION (0.068)
+#define CCEXP_VERSION (0.069)
 
 #define __CCEXP__USE_MVECTOR
 // MVECTOR can be downloaded from https://github.com/terablade2001/MVECTOR
@@ -178,6 +178,7 @@ definition which can change depending the compiler.
 		}\
 	}
 
+#define CCEXP_MAX_ERRORCHAR_SIZE (4096)
 
 using namespace std;
 __USE_MVECTOR_NAMESPACE__
@@ -256,7 +257,6 @@ class CCEXPMat : public CCEXPBase {
 		int StoreData(FILE* fp);
 		int Reset(void);
 
-		
 	private:
 		char name[65];
 		char type[65];
@@ -284,6 +284,7 @@ class CCEXP {
 	MVECTOR<shared_ptr<CCEXPBase>> M;
 	char SavingFile[257];
 	MVECTOR<string> Errors;
+	MVECTOR<char> errorchar;
 
 	CCEXP();
 	CCEXP(const char* fname);
@@ -553,6 +554,7 @@ void	Reset(CCEXP &obj);
 void	CleanTable(CCEXP &obj, const char* matname);
 void	CleanTable(CCEXP &obj, size_t sel);
 size_t	GetErrors(CCEXP &obj, MVECTOR<string>* &ptrError);
+char*	GetErrors(CCEXP &obj);
 size_t	NumberOfTables(CCEXP &obj);
 void	DBG_SetStatus(CCEXP &obj, int status);
 int Analyze(CCEXP &obj, MVECTOR<MVECTOR<char>> &v);

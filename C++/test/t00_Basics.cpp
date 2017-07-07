@@ -122,6 +122,7 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	 // to 3 (by AddMatrix()). Thus errors should hit after 3 max lines.
 	for (int row = 0; row < 5; row++)
 		CCEXP::NewRow(DBG, 2, 1);
+printf("%s\n", CCEXP::GetErrors(DBG)); // Display the error as simple char sequence.
 printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	_DBG_ERROR_STOP_OR_CONTINUE_(DBG); 
 #ifdef __CCEXP__USE_MVECTOR
