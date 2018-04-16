@@ -24,7 +24,7 @@
 #ifndef __CCEXP_HPP__
 #define __CCEXP_HPP__
 
-#define CCEXP_VERSION (0.070)
+#define CCEXP_VERSION (0.071)
 
 #define __CCEXP__USE_MVECTOR
 // MVECTOR can be downloaded from https://github.com/terablade2001/MVECTOR
@@ -45,6 +45,7 @@
 	#define __CCEXP_VECTOR_CLEAR(v) (v).clear(); (v).resize(0);
 #else
 	#include "../../../sub_modules/MVECTOR/src/include/MVECTOR.hpp"
+	// #include "MVECTOR.hpp"
 	#define __USE_MVECTOR_NAMESPACE__ using namespace ns_MVECTOR;
 	#define __CCEXP_VECTOR_STEPS(v,a,b) (v).set_steps((a),(b));
 	#define __CCEXP_VECTOR_CLEAR(v) (v).clear();
@@ -529,36 +530,38 @@ template<class T> int CCEXPMat<T>::Reset(void) {
 
 //@#| ############### CCEXP API Functions ###############
 //@#: ############### .CPP file ###############
-void	Initialize(CCEXP &obj, const char* fname, const char* Path = NULL, bool isactive = true);
-void	StoreData(CCEXP &obj, const char* FName = NULL);
-size_t	StoreIData(CCEXP &obj);
-void	Open(CCEXP &obj, const char* filename);
-void	Close(CCEXP &obj);
-void	NewRow(CCEXP &obj, const char *matname, int empty = 0);
-void	NewRow(CCEXP &obj, size_t sel, int empty = 0);
-void	NoNewRow(CCEXP &obj, const char *matname);
-void	NoNewRow(CCEXP &obj, size_t sel);
-size_t	Rows(CCEXP &obj, const char* matname);
-size_t	Rows(CCEXP &obj, size_t sel);
-size_t	Cols(CCEXP &obj, const char* matname, size_t row);
-size_t	Cols(CCEXP &obj,  size_t sel, size_t row);
-void	DeleteLastRow(CCEXP &obj, const char* matname);
-void	DeleteLastRow(CCEXP &obj, size_t sel);
-void	DeleteRow(CCEXP &obj, const char* matname, size_t row);
-void	DeleteRow(CCEXP &obj, size_t sel, size_t row);
-void	DeleteLastElement(CCEXP &obj, const char* matname, size_t row);
-void	DeleteLastElement(CCEXP &obj, size_t sel, size_t row);
-size_t	getTableID(CCEXP &obj, const char* matname);
-char*	getTableName(CCEXP &obj, size_t sel);
-void	Reset(CCEXP &obj);
-void	CleanTable(CCEXP &obj, const char* matname);
-void	CleanTable(CCEXP &obj, size_t sel);
-size_t	GetErrors(CCEXP &obj, MVECTOR<string>* &ptrError);
-char*	GetErrors(CCEXP &obj, size_t &rows);
-size_t	NumberOfTables(CCEXP &obj);
-void	DBG_SetStatus(CCEXP &obj, int status);
-int Analyze(CCEXP &obj, MVECTOR<MVECTOR<char>> &v);
-int Analyze(const char* filename, MVECTOR<MVECTOR<char>> &v, int flag = 0);
+void   Initialize(CCEXP &obj, const char* fname, const char* Path = NULL, bool isactive = true);
+void   StoreData(CCEXP &obj, const char* FName = NULL);
+size_t StoreIData(CCEXP &obj);
+void   Open(CCEXP &obj, const char* filename);
+void   Close(CCEXP &obj);
+void   NewRow(CCEXP &obj, const char *matname, int empty = 0);
+void   NewRow(CCEXP &obj, size_t sel, int empty = 0);
+void   NoNewRow(CCEXP &obj, const char *matname);
+void   NoNewRow(CCEXP &obj, size_t sel);
+size_t Rows(CCEXP &obj, const char* matname);
+size_t Rows(CCEXP &obj, size_t sel);
+size_t Cols(CCEXP &obj, const char* matname, size_t row);
+size_t Cols(CCEXP &obj,  size_t sel, size_t row);
+bool   Ignored(CCEXP &obj, size_t sel);
+bool   Ignored(CCEXP &obj, const char* matname);
+void   DeleteLastRow(CCEXP &obj, const char* matname);
+void   DeleteLastRow(CCEXP &obj, size_t sel);
+void   DeleteRow(CCEXP &obj, const char* matname, size_t row);
+void   DeleteRow(CCEXP &obj, size_t sel, size_t row);
+void   DeleteLastElement(CCEXP &obj, const char* matname, size_t row);
+void   DeleteLastElement(CCEXP &obj, size_t sel, size_t row);
+size_t getTableID(CCEXP &obj, const char* matname);
+char*  getTableName(CCEXP &obj, size_t sel);
+void   Reset(CCEXP &obj);
+void   CleanTable(CCEXP &obj, const char* matname);
+void   CleanTable(CCEXP &obj, size_t sel);
+size_t GetErrors(CCEXP &obj, MVECTOR<string>* &ptrError);
+char*  GetErrors(CCEXP &obj, size_t &rows);
+size_t NumberOfTables(CCEXP &obj);
+void   DBG_SetStatus(CCEXP &obj, int status);
+int    Analyze(CCEXP &obj, MVECTOR<MVECTOR<char>> &v);
+int    Analyze(const char* filename, MVECTOR<MVECTOR<char>> &v, int flag = 0);
 
 //@#: ############### Templates API Functions ###############
 template<class T> inline void AddTable (

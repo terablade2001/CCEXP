@@ -229,6 +229,7 @@ size_t Rows(CCEXP &obj, const char* matname) {
 }
 
 
+
 size_t Cols(CCEXP &obj, size_t sel, size_t row) {
 	obj.ErrorId = 0;
 	if (!obj.isActive) return 0;
@@ -250,6 +251,29 @@ size_t Cols(CCEXP &obj, const char* matname, size_t row) {
 	if (sel == MAXSIZE_T) CCEXP_ERR_T(obj, 0, ERROR::TableNotFound, "Cols():: Failed to find table with name [%s]!", matname);
 	return Cols(obj, sel, row); 
 }
+
+
+bool Ignored(CCEXP &obj, size_t sel) {
+	obj.ErrorId = 0;
+	if (!obj.isActive) return 0;
+	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR_T(obj, 0, ERROR::StatusNotReady, "Ignored():: CCEXP Table with ID [" __ZU__ "] has wrong status." , sel );
+	obj.Status = CCEXPORTMAT_ACTIVE;
+	if (sel < obj.M.size()) {
+		bool ret = (obj.M[sel])->getIgnoreStatus();
+		obj.Status = CCEXPORTMAT_READY;
+		return ret;
+	}
+	obj.Status = CCEXPORTMAT_READY;
+	CCEXP_ERR_T(obj, 0, ERROR::TableNotFound, "Ignored():: Table with ID = " __ZU__ " was not found!...", sel);
+}
+bool Ignored(CCEXP &obj, const char* matname) {
+	obj.ErrorId = 0;
+	size_t sel = obj.getTableIndexByName(matname);
+	if (sel == MAXSIZE_T) CCEXP_ERR_T(obj, 0, ERROR::TableNotFound, "Ignored():: Failed to find table with name [%s]!", matname);
+	return Ignored(obj, sel); 
+}
+
+
 
 void DeleteLastRow(CCEXP &obj, size_t sel) {
 	obj.ErrorId = 0;
