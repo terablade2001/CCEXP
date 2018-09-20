@@ -24,7 +24,7 @@
 #ifndef __CCEXP_HPP__
 #define __CCEXP_HPP__
 
-#define CCEXP_VERSION (0.071)
+#define CCEXP_VERSION (0.072)
 
 #define __CCEXP__USE_MVECTOR
 // MVECTOR can be downloaded from https://github.com/terablade2001/MVECTOR
@@ -557,6 +557,7 @@ void   Reset(CCEXP &obj);
 void   CleanTable(CCEXP &obj, const char* matname);
 void   CleanTable(CCEXP &obj, size_t sel);
 size_t GetErrors(CCEXP &obj, MVECTOR<string>* &ptrError);
+size_t GetNErrors(CCEXP &obj);
 char*  GetErrors(CCEXP &obj, size_t &rows);
 size_t NumberOfTables(CCEXP &obj);
 void   DBG_SetStatus(CCEXP &obj, int status);

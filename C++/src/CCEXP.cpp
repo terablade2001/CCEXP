@@ -432,6 +432,10 @@ char*	GetErrors(CCEXP &obj, size_t &rows) {
 	return obj.errorchar.data();
 }
 
+size_t GetNErrors(CCEXP &obj) {
+	return obj.Errors.size();
+}
+
 size_t NumberOfTables(CCEXP &obj) {
 	return obj.M.size();
 }
