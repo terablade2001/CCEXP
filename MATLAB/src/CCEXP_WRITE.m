@@ -1,6 +1,6 @@
 % MIT License
 
-% Copyright (c) 2016 - 2017 Vasileios Kon. Pothos (terablade2001)
+% Copyright (c) 2016 - 2019 Vasileios Kon. Pothos (terablade2001)
 % https://github.com/terablade2001/CCEXP
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -61,13 +61,16 @@ function CCEXP_WRITE(fname,V)
 		% Create an array of the columns per row, and store it.
 		DPL = zeros(1,N,size_t);
 		for j=1:N
-			[R, Cols] = size(V{i}{1,4}{j});
-			if (R > 1); error('Each row should be 1-D'); end;
-			DPL(j) = Cols;
+			DPL(j) = numel(V{i}{1,4}{j});
 		end
 		fwrite(fp, DPL, size_t);
 
 		% Store the data for every row..
-		for j=1:N; fwrite(fp, V{i}{1,4}{j}, V{i}{1,2}); end;
+		Data = V{i}{1,4}{j};
+		DataDims = length(size(Data));
+		PermuteIDX = [1:DataDims];
+		PermuteIDX(1:2)=[2 1];
+		Data=permute(Data,PermuteIDX);
+		for j=1:N; fwrite(fp, Data(:), V{i}{1,2}); end;
 	end
 	fclose(fp);
