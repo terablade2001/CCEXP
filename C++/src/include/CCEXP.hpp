@@ -24,7 +24,7 @@
 #ifndef __CCEXP_HPP__
 #define __CCEXP_HPP__
 
-#define CCEXP_VERSION (0.073)
+#define CCEXP_VERSION (0.074)
 
 #define __CCEXP__USE_MVECTOR
 // MVECTOR can be downloaded from https://github.com/terablade2001/MVECTOR
@@ -242,6 +242,7 @@ class CCEXPMat : public CCEXPBase {
 		int InitRowByScalar(size_t row, T val, size_t n);
 
 		int getRow(size_t row, MVECTOR<T>* &vres);
+		int getTablePtr(list<MVECTOR<T>>* &vres);
 
 		int CompareName(const char* Name);
 		bool getIgnoreStatus(void);
@@ -406,6 +407,10 @@ template<class T> int CCEXPMat<T>::getRow(size_t row, MVECTOR<T>* &vres) {
 	return 0;
 }
 
+template<class T> int CCEXPMat<T>::getTablePtr(list<MVECTOR<T>>* &vres) {
+	vres = &data;
+	return 0;
+}
 
 
 
@@ -960,6 +965,37 @@ template<class T> inline T* getVal(
 		CCEXP_ERR_T(obj, NULL, ERROR::TableNotFound, "getVal():: Failed to find table with name [%s]!", matname);
 	}
 	T* vret = getVal<T>(obj, sel, row, col);
+	return vret;
+}
+
+
+template<class T> inline list<MVECTOR<T>>* getTablePtr(
+	CCEXP &obj, size_t sel
+) {
+	obj.ErrorId = 0;
+	if (!obj.isActive) return NULL;
+	if (obj.Status != CCEXPORTMAT_READY) CCEXP_ERR_T(obj, NULL, ERROR::StatusNotReady , "getTable():: CCEXP object with filename [%s] has wrong status." , obj.SavingFile );
+	obj.Status = CCEXPORTMAT_ACTIVE;
+	if (sel < obj.M.size()) {
+		CCEXPMat<T>* U = static_cast<CCEXPMat<T>*>(obj.M[sel].get());
+		list<MVECTOR<T>>* vret;
+		int ret = U->getTablePtr(vret);
+		if (ret != 0) CCEXP_ERR_T(obj, NULL, ret, "getTable():: Internal error occured during getTable() (error: %i)!", ret);
+		obj.Status = CCEXPORTMAT_READY;
+		return vret;
+	}
+	obj.Status = CCEXPORTMAT_READY;
+	CCEXP_ERR_T(obj, NULL, ERROR::TableNotFound, "getTable():: Failed to find table with ID [" __ZU__ "]!", sel);
+}
+template<class T> inline list<MVECTOR<T>>* getTablePtr(
+	CCEXP &obj, const char* matname
+) {
+	obj.ErrorId = 0;
+	size_t sel = obj.getTableIndexByName(matname);
+	if (sel == MAXSIZE_T) {
+		CCEXP_ERR_T(obj, NULL, ERROR::TableNotFound, "getTable():: Failed to find table with name [%s]!", matname);
+	}
+	list<MVECTOR<T>>* vret = getTablePtr<T>(obj, sel);
 	return vret;
 }
 
