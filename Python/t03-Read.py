@@ -20,14 +20,12 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from setuptools import setup
 
-setup(name='ccexp',
-      version='0.017',
-      description='CCEXP Data file reading/writing module',
-      url='https://github.com/terablade2001/CCEXP/',
-      author='Vasileios Kon. Pothos',
-      author_email='terablade2001@yahoo.gr',
-      license='MIT',
-      packages=[''],
-      zip_safe=False)
+from ccexp import CCEXPRead
+
+d = CCEXPRead("Test.ccexp",1)
+
+print(d["Username"].Data)
+print(d["Number"].Data)
+print(d["FloatNumber"].Data)
+print(d["DoubleNumber"].Data)

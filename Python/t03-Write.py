@@ -20,14 +20,25 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from setuptools import setup
 
-setup(name='ccexp',
-      version='0.017',
-      description='CCEXP Data file reading/writing module',
-      url='https://github.com/terablade2001/CCEXP/',
-      author='Vasileios Kon. Pothos',
-      author_email='terablade2001@yahoo.gr',
-      license='MIT',
-      packages=[''],
-      zip_safe=False)
+from ccexp import *
+EXP = CCEXP()
+EXP.AddTable("Username","char")
+EXP.AddTable("Number","int8")
+EXP.AddTable("FloatNumber","single")
+EXP.AddTable("DoubleNumber","double")
+
+EXP.AddRow("Username", "Person-A")
+EXP.AddRow("Number", [1, 2, 3])
+EXP.AddRow("Username", "Person-B")
+EXP.AddRow("Number", [4, 5, 6])
+EXP.AddRow("FloatNumber", [4.781, 5.141, 6.111, 8.7])
+EXP.AddRow("DoubleNumber", [4.781, 5.141, 6.111, 8.7])
+EXP.AddRow("DoubleNumber", [0.1, 1.1])
+EXP.AddRow("DoubleNumber", [])
+EXP.AddRow("DoubleNumber", [121.0])
+EXP.StoreData("Test.ccexp")
+
+
+
+
