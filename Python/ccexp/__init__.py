@@ -21,12 +21,16 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import sys
 import struct
 
 class CCEXP:
   def __init__(self):
     self.obj = {}
-    self.PyTypes = { "char" : "c", "int8" : "b",  "uint8" : "B",   "bool" : "?", "int16" : "h", "uint16" : "H", "int32" : "i", "uint32" : "I", "int64" : "q", "uint64" : "Q", "single" : "f", "double" : "d", "size_t" : "N" }
+    if sys.version_info[0] < 3:
+      self.PyTypes = { "char" : "c", "int8" : "b",  "uint8" : "B",   "bool" : "?", "int16" : "h", "uint16" : "H", "int32" : "i", "uint32" : "I", "int64" : "q", "uint64" : "Q", "single" : "f", "double" : "d", "size_t" : "Q" }
+    else:
+      self.PyTypes = { "char" : "c", "int8" : "b",  "uint8" : "B",   "bool" : "?", "int16" : "h", "uint16" : "H", "int32" : "i", "uint32" : "I", "int64" : "q", "uint64" : "Q", "single" : "f", "double" : "d", "size_t" : "N" }
     self.PyTypesBytes = { "char" : 1, "int8" : 1, "uint8" : 1, "bool" : 1, "int16" : 2, "uint16" : 2, "int32" : 4, "uint32" :4,   "int64" : 8, "uint64" : 8, "single" : 4, "double" : 8, "size_t" : 8 }
     return
 
@@ -54,11 +58,12 @@ class CCEXP:
     return
 
   def StoreData(self, filename):
+    sizeT = self.PyTypes["size_t"]
     NTables = len(self.obj.keys())
     ByteSize = 8
     with open(filename,"wb") as fout:
       fout.write(struct.pack('I', ByteSize))
-      fout.write(struct.pack('N', NTables))
+      fout.write(struct.pack(sizeT, NTables))
 
       for tableName in self.obj.keys():
         named = tableName
@@ -77,13 +82,13 @@ class CCEXP:
         fout.write(named)
         fout.write(typed)
         nRows = self.obj[tableName]["cnt"]
-        fout.write(struct.pack('N', PackBytes))
-        fout.write(struct.pack('N', nRows))
-        fout.write(struct.pack('N', nRows))
+        fout.write(struct.pack(sizeT, PackBytes))
+        fout.write(struct.pack(sizeT, nRows))
+        fout.write(struct.pack(sizeT, nRows))
         cols = []
         for row in range(0, nRows):
           cols = len(self.obj[tableName]["data"][row])
-          fout.write(struct.pack('N',cols))
+          fout.write(struct.pack(sizeT,cols))
         for row in range(0, nRows):
           arr = self.obj[tableName]["data"][row]
           if type(arr) is str:
@@ -98,7 +103,10 @@ class CCEXP:
 
 
 def CCEXPRead(filename, flag):
-  PyTypes = { "char" : "c", "int8" : "b",  "uint8" : "B",   "bool" : "?", "int16" : "h", "uint16" : "H", "int32" : "i", "uint32" : "I", "int64" : "q", "uint64" : "Q", "single" : "f", "double" : "d", "size_t" : "N" }
+  if sys.version_info[0] < 3:
+    PyTypes = { "char" : "c", "int8" : "b",  "uint8" : "B",   "bool" : "?", "int16" : "h", "uint16" : "H", "int32" : "i", "uint32" : "I", "int64" : "q", "uint64" : "Q", "single" : "f", "double" : "d", "size_t" : "Q" }
+  else:
+    PyTypes = { "char" : "c", "int8" : "b",  "uint8" : "B",   "bool" : "?", "int16" : "h", "uint16" : "H", "int32" : "i", "uint32" : "I", "int64" : "q", "uint64" : "Q", "single" : "f", "double" : "d", "size_t" : "N" }
   d={}
 
   class CCCEXP:
@@ -107,17 +115,18 @@ def CCEXPRead(filename, flag):
     TypeSize=[]
     Data=[]
 
+  sizeT = PyTypes["size_t"]
   fin = open(filename,"rb")
   ByteSize = (struct.unpack('I', fin.read(4)))[0]
-  NTables = (struct.unpack('N', fin.read(ByteSize)))[0]
+  NTables = (struct.unpack(sizeT, fin.read(ByteSize)))[0]
 
   for x in range(NTables):
     name = (fin.read(64).decode('utf-8')).replace(str("\0"), "")
     typed = (fin.read(64).decode('utf-8')).replace(str("\0"), "")
     PyType = PyTypes[typed]
-    typeSize = (struct.unpack('N', fin.read(ByteSize)))[0]
-    nElements = (struct.unpack('N', fin.read(ByteSize)))[0]
-    MaxRows = (struct.unpack('N', fin.read(ByteSize)))[0]
+    typeSize = (struct.unpack(sizeT, fin.read(ByteSize)))[0]
+    nElements = (struct.unpack(sizeT, fin.read(ByteSize)))[0]
+    MaxRows = (struct.unpack(sizeT, fin.read(ByteSize)))[0]
     if (nElements > MaxRows):
       nElements = MaxRows
     Table = CCCEXP()
@@ -125,22 +134,36 @@ def CCEXPRead(filename, flag):
     Table.Type = typed
     Table.TypeSize = typeSize
     Table.Data=[]
-    it = struct.iter_unpack('N', fin.read(ByteSize*nElements))
-    for t in it: # For each row of the table t[0] is the elements of the row
-      elit = struct.iter_unpack(PyType, fin.read(typeSize*t[0]))
-      row=[]
-      for el in elit:
-        row.append(el[0])
-      if Table.Type == 'char':
-        row = str(b''.join(row).decode('utf8'))
-      Table.Data.append(row)
+    if sys.version_info[0] < 3:
+      cols = []
+      for i in range(nElements):
+        ccols = struct.unpack_from(sizeT, fin.read(ByteSize))
+        cols.append(ccols[0])
+      for i in range(nElements):
+        row=[]
+        for c in range(cols[i]):
+          byte = struct.unpack_from(PyType, fin.read(typeSize))
+          row.append(byte[0])
+        if Table.Type == 'char':
+          row = str(b''.join(row).decode('utf8'))
+        Table.Data.append(row)
+    else:
+      it = struct.iter_unpack(sizeT, fin.read(ByteSize*nElements))
+      for t in it: # For each row of the table t[0] is the elements of the row
+        elit = struct.iter_unpack(PyType, fin.read(typeSize*t[0]))
+        row=[]
+        for el in elit:
+          row.append(el[0])
+        if Table.Type == 'char':
+          row = str(b''.join(row).decode('utf8'))
+        Table.Data.append(row)
     d[Table.Name] = Table
 
   fin.close()
 
   if (flag == 1):
     N = len(d)
-    print("Tables: %i" % (N))
+    print("--- [%s] ---:  Tables: %i" % (filename, N))
     Keys = list(d.keys())
     for x in range(N):
       k = Keys[x]
