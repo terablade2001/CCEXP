@@ -15,6 +15,7 @@ if (UNIX)
 endif(UNIX)
 
 set(LIB__MVECTOR ON)
+set(LIB__CECS ON)
 
 
 set(CMAKE_CONFIGURATION_TYPES "Release")
@@ -30,6 +31,7 @@ set (CXX_SRCS
     ${CMAKE_CURRENT_LIST_DIR}/C++/test/t00_Basics.cpp
     ${CMAKE_CURRENT_LIST_DIR}/C++/test/t01_Load.cpp
     ${CMAKE_CURRENT_LIST_DIR}/C++/test/t02_ExternalWriteLoad.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/C++/test/t03_cecs_test.cpp
 )
 
 if(LIB__MVECTOR)
@@ -49,7 +51,24 @@ if(LIB__MVECTOR)
 		${CMAKE_CURRENT_LIST_DIR}/sub_modules/MVECTOR/src/MVECTOR.cpp
 	)
 endif(LIB__MVECTOR)
-		
+
+if(LIB__CECS)
+	message("")
+	message("####################################################################")
+	message("#############     Using also CECS library        ###################")
+	message("####################################################################")
+	message("  -> Clone Recusive: git clone --recursive https://github.com/terablade2001/CCEXP")
+	message("  -> Or update submodules: git submodule init")
+	message("                           git submodule update")	
+	message("####################################################################")
+	message("####################################################################")
+	message("####################################################################")
+	message("")
+	set (CXX_SRCS ${CXX_SRCS}
+		${CMAKE_CURRENT_LIST_DIR}/sub_modules/CECS/C++/src/CECS-c.cpp
+		${CMAKE_CURRENT_LIST_DIR}/sub_modules/CECS/C++/src/CECS.cpp
+	)
+endif(LIB__CECS)
 
 add_executable(CCEXP ${CXX_SRCS})
 target_link_libraries(CCEXP ${LINK_OPTIONS})

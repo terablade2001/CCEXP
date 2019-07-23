@@ -24,9 +24,10 @@
 #ifndef __CCEXP_HPP__
 #define __CCEXP_HPP__
 
-#define CCEXP_VERSION (0.074)
+#define CCEXP_VERSION (0.075)
 
 #define __CCEXP__USE_MVECTOR
+#define __CCEXP__USE_CECS
 // MVECTOR can be downloaded from https://github.com/terablade2001/MVECTOR
 
 // Include C/C++ Libraries
@@ -51,6 +52,17 @@
 	#define __CCEXP_VECTOR_CLEAR(v) (v).clear();
 #endif
 
+#ifdef __CCEXP__USE_CECS
+	#ifdef _MSC_VER
+		#error CECS is not yet supported with MSC. Undefine __CCEXP__USE_CECS definition at CCEXP.hpp
+	#endif
+	#include "../../../sub_modules/CECS/C++/src/include/CECS.hpp"
+	// #include "../../CECS/include/CECS.hpp"
+	#ifndef __ECSOBJ__
+		#define __ECSOBG__ ECS
+	#endif
+	static CECS __ECSOBJ__("CCEXP");
+#endif
 
 /* ----------- Support for MSVC compilers --------
 	As MSVC has basic differences with other compilers, I'm trying to modify 
@@ -75,7 +87,8 @@ definition which can change depending the compiler.
 #define TRACK_ANALYTIC_ERRORS
 
 #ifndef __FNAME__
-	#define __FNAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+	#define __FNAMEBSL__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
+	#define __FNAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FNAMEBSL__ )
 #endif
 
 #define CCEXPORTMAT_INIT		(0)
@@ -87,38 +100,45 @@ definition which can change depending the compiler.
 
 #ifndef _MSC_VER
 	#ifdef TRACK_ANALYTIC_ERRORS
-		#define CCEXP_ERR(obj, errid, str, args...) { \
-			char ccexp_errStr[2049]={0};\
-			snprintf(ccexp_errStr, 2048, str, args); \
-			if ((obj).Errors.size() < 128)\
-			(obj).Errors.push_back(string(ccexp_errStr)); \
-			return errid; }
+		#ifdef __CCEXP__USE_CECS
+			#define CCEXP_ERR(obj, errid, args...) { _ERRI(1, args) (obj).Errors.push_back(string("CECS Error captured!")); }
+			#define CCEXP_ERR_V(obj, errid, args...) { _ERR(1, args) (obj).Errors.push_back(string("CECS Error captured!")); }
+			#define CCEXP_ERR_T(obj, val, errid, args...) { _ERRO(1, { return (val); }, args) (obj).Errors.push_back(string("CECS Error captured!")); }
+			#define __CCEXP_ERR_DISPLAY(obj, N) { cerr << __ECSOBJ__.str() << endl; }
+		#else
+			#define CCEXP_ERR(obj, errid, str, args...) { \
+				char ccexp_errStr[2049]={0};\
+				snprintf(ccexp_errStr, 2048, str, args); \
+				if ((obj).Errors.size() < 128)\
+				(obj).Errors.push_back(string(ccexp_errStr)); \
+				return errid; }
 
-		#define CCEXP_ERR_V(obj, errid, str, args...) { \
-			char ccexp_errStr[2049]={0};\
-			snprintf(ccexp_errStr, 2048, str, args); \
-			if ((obj).Errors.size() < 128)\
-			(obj).Errors.push_back(string(ccexp_errStr)); \
-			obj.ErrorId = errid; return; }
+			#define CCEXP_ERR_V(obj, errid, str, args...) { \
+				char ccexp_errStr[2049]={0};\
+				snprintf(ccexp_errStr, 2048, str, args); \
+				if ((obj).Errors.size() < 128)\
+				(obj).Errors.push_back(string(ccexp_errStr)); \
+				obj.ErrorId = errid; return; }
 
-		#define CCEXP_ERR_T(obj, val, errid, str, args...) { \
-			char ccexp_errStr[2049]={0};\
-			snprintf(ccexp_errStr, 2048, str, args); \
-			if ((obj).Errors.size() < 128)\
-			(obj).Errors.push_back(string(ccexp_errStr)); \
-			obj.ErrorId = errid; return (val); }
+			#define CCEXP_ERR_T(obj, val, errid, str, args...) { \
+				char ccexp_errStr[2049]={0};\
+				snprintf(ccexp_errStr, 2048, str, args); \
+				if ((obj).Errors.size() < 128)\
+				(obj).Errors.push_back(string(ccexp_errStr)); \
+				obj.ErrorId = errid; return (val); }
 
-		#define __CCEXP_ERR_DISPLAY(obj, N) { \
-			size_t n=size_t(N); if (n > 0) { \
-			MVECTOR<string>* v; size_t TN = CCEXP::GetErrors(obj, v);\
-			size_t DN = std::min(n, TN); \
-			if (TN != 0) {\
-			cerr << endl << "[" << __FNAME__ << ", " << __LINE__ << \
-			"]: CCEXP Err Display >> " << endl; \
-			for (size_t i = 0; i < DN; i++)\
-				cerr << " * " << (*v)[i].c_str() << endl; \
-			(obj).Errors.clear(); }}\
-			}
+			#define __CCEXP_ERR_DISPLAY(obj, N) { \
+				size_t n=size_t(N); if (n > 0) { \
+				MVECTOR<string>* v; size_t TN = CCEXP::GetErrors(obj, v);\
+				size_t DN = std::min(n, TN); \
+				if (TN != 0) {\
+				cerr << endl << "[" << __FNAME__ << ", " << __LINE__ << \
+				"]: CCEXP Err Display >> " << endl; \
+				for (size_t i = 0; i < DN; i++)\
+					cerr << " * " << (*v)[i].c_str() << endl; \
+				(obj).Errors.clear(); }}\
+				}
+		#endif
 	#endif
 	#ifndef TRACK_ANALYTIC_ERRORS
 		#define CCEXP_ERR(obj, errid, str, args...) return errid;
@@ -185,22 +205,21 @@ using namespace std;
 __USE_MVECTOR_NAMESPACE__
 
 namespace CCEXP {
-	
-enum ERROR {
-    StatusNotInit = -9999, /// CCEXP object had status different that CCEXPORTMAT_INIT. (i.e. not Reseted before re-Initialize)
-    StatusNotReady, /// CCEXP object was not at READY state when a new call to it was requested (thread-safe).
-	StatusIsWrong, /// Generic wrong status message (i.e. for Load())
-    IO_Error, /// Access to a I/O file failed (i.e. FILE* fp = fopen(...) == NULL )
-    MaximumRowsReached, /// When Adding a new row, and maximum rows have been reached!
-	ReqRowLargerThanInTable, /// When a requested row index is larger than the maximum rows in Table.
-	ReqColumnLargerThanInRow, /// When a requested column index is larger than the maximum columns in a Table's row.
-	TableNotFound, /// When a table is not found...
-	TableHasNoRows, /// When a table has no rows, but it's requested to do something on a row.
-	DublicatedTable, /// When a table is added which has the same name with other table.
-	CCEXP_AlreadyClosed, /// When CCEXP::Close() is called to an alreaded closed file.
-	
-    Other /// Any other error...
-};
+
+	enum ERROR {
+		StatusNotInit = -9999, /// CCEXP object had status different that CCEXPORTMAT_INIT. (i.e. not Reseted before re-Initialize)
+		StatusNotReady, /// CCEXP object was not at READY state when a new call to it was requested (thread-safe).
+		StatusIsWrong, /// Generic wrong status message (i.e. for Load())
+		IO_Error, /// Access to a I/O file failed (i.e. FILE* fp = fopen(...) == NULL )
+		MaximumRowsReached, /// When Adding a new row, and maximum rows have been reached!
+		ReqRowLargerThanInTable, /// When a requested row index is larger than the maximum rows in Table.
+		ReqColumnLargerThanInRow, /// When a requested column index is larger than the maximum columns in a Table's row.
+		TableNotFound, /// When a table is not found...
+		TableHasNoRows, /// When a table has no rows, but it's requested to do something on a row.
+		DublicatedTable, /// When a table is added which has the same name with other table.
+		CCEXP_AlreadyClosed, /// When CCEXP::Close() is called to an alreaded closed file.
+		Other /// Any other error...
+	};
 
 class CCEXPBase;
 template<class T> class CCEXPMat;

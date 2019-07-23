@@ -29,6 +29,7 @@ __USE_MVECTOR_NAMESPACE__
 int t00_Basics(void* mv_);
 int t01_Load(void* mv_);
 int t02_ExternalWriteLoad(void* mv_);
+int t03_cecs_test(void* mv_);
 
 #ifdef __CCEXP__USE_MVECTOR
 	MVECTOR<char> MainMem;
@@ -40,11 +41,13 @@ int main(int argc, char **argv) {
 			"1) CCEXP t00\n"
 			"2) CCEXP t01\n"
 			"3) CCEXP t02\n"
+			"4) CCEXP t03\n"
 		);
 	for(int i = 1; i < argc; i++ ) {
 				 if( !strcmp( argv[i], "t00" )) RunTest = 0;
 		else if( !strcmp( argv[i], "t01" )) RunTest = 1;
 		else if( !strcmp( argv[i], "t02" )) RunTest = 2;
+		else if( !strcmp( argv[i], "t03" )) RunTest = 3;
 		else { int ii=i-1;
 			printf("Error >> Unrecognized command: [%s %s].\n"
 				"Please check the commands syntax (append option: [-help]).\n"
@@ -57,6 +60,7 @@ int main(int argc, char **argv) {
 			 if (RunTest == 0) t00_Basics((void*)&MainMem);
 	else if (RunTest == 1) t01_Load((void*)&MainMem);
 	else if (RunTest == 2) t02_ExternalWriteLoad((void*)&MainMem);
+	else if (RunTest == 3) t03_cecs_test((void*)&MainMem);
 
 #ifdef __CCEXP__USE_MVECTOR
 	printf("[%s: %i]: Main(): Total MVECTOR Bytes main() exits: " __ZU__ "\n",

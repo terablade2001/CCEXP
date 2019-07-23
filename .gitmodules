@@ -1,3 +1,6 @@
 [submodule "sub_modules/MVECTOR"]
 	path = sub_modules/MVECTOR
 	url = https://github.com/terablade2001/MVECTOR.git
+[submodule "sub_modules/CECS"]
+	path = sub_modules/CECS
+	url = https://github.com/terablade2001/CECS
