@@ -24,7 +24,16 @@
 // Include the CCEXP library
 #include "../src/include/CCEXP.hpp"
 
+static CECS __ECSOBJ__("TestMod","Main-CECS");
+
 int t03_cecs_test(void* mv_) {
+	// A good tactic is to connect different objects. In this example both
+	// CCEXPECS and __ECSOBJ__ do use the same static array of CECS.
+	// But if there are multiple libraries that has CECS, there will be different
+	// static arrays and there might be different records on different arrays!
+	// The connection ensures that errors are passed to the same array.
+	CCEXPECS.ConnectTo(__ECSOBJ__.cecs());
+
 	#ifndef __CCEXP__USE_CECS
 		printf("__CCEXP__USE_CECS is not defined. This test can't run!");
 		return -1;

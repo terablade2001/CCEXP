@@ -24,7 +24,7 @@
 #ifndef __CCEXP_HPP__
 #define __CCEXP_HPP__
 
-#define CCEXP_VERSION (0.075)
+#define CCEXP_VERSION (0.076)
 
 #define __CCEXP__USE_MVECTOR
 #define __CCEXP__USE_CECS
@@ -59,9 +59,9 @@
 	#include "../../../sub_modules/CECS/C++/src/include/CECS.hpp"
 	// #include "../../CECS/include/CECS.hpp"
 	#ifndef __ECSOBJ__
-		#define __ECSOBG__ ECS
+		#define __ECSOBJ__ ECS
 	#endif
-	static CECS __ECSOBJ__("CCEXP");
+	static CECS CCEXPECS("CCEXP");
 #endif
 
 /* ----------- Support for MSVC compilers --------
@@ -101,10 +101,10 @@ definition which can change depending the compiler.
 #ifndef _MSC_VER
 	#ifdef TRACK_ANALYTIC_ERRORS
 		#ifdef __CCEXP__USE_CECS
-			#define CCEXP_ERR(obj, errid, args...) { _ERRI(1, args) (obj).Errors.push_back(string("CECS Error captured!")); }
-			#define CCEXP_ERR_V(obj, errid, args...) { _ERR(1, args) (obj).Errors.push_back(string("CECS Error captured!")); }
-			#define CCEXP_ERR_T(obj, val, errid, args...) { _ERRO(1, { return (val); }, args) (obj).Errors.push_back(string("CECS Error captured!")); }
-			#define __CCEXP_ERR_DISPLAY(obj, N) { cerr << __ECSOBJ__.str() << endl; }
+			#define CCEXP_ERR(obj, errid, args...) { CECS_ERRI(CCEXPECS, 1, args) (obj).Errors.push_back(string("CECS Error captured!")); }
+			#define CCEXP_ERR_V(obj, errid, args...) { CECS_ERR(CCEXPECS, 1, args) (obj).Errors.push_back(string("CECS Error captured!")); }
+			#define CCEXP_ERR_T(obj, val, errid, args...) { CECS_ERRO(CCEXPECS, 1, { return (val); }, args) (obj).Errors.push_back(string("CECS Error captured!")); }
+			#define __CCEXP_ERR_DISPLAY(obj, N) { cerr << CCEXPECS.str() << endl; }
 		#else
 			#define CCEXP_ERR(obj, errid, str, args...) { \
 				char ccexp_errStr[2049]={0};\
