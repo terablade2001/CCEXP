@@ -24,7 +24,7 @@
 #ifndef __CCEXP_HPP__
 #define __CCEXP_HPP__
 
-#define CCEXP_VERSION (0.077)
+#define CCEXP_VERSION (0.078)
 
 #define __CCEXP__USE_MVECTOR
 #define __CCEXP__USE_CECS
@@ -61,7 +61,9 @@
 	#ifndef __ECSOBJ__
 		#define __ECSOBJ__ ECS
 	#endif
-	static CECS CCEXPECS("CCEXP");
+namespace CCEXP {
+	extern CECS CCEXPECS;
+};
 #endif
 
 /* ----------- Support for MSVC compilers --------
@@ -93,7 +95,7 @@ definition which can change depending the compiler.
 
 #define CCEXPORTMAT_INIT		(0)
 #define CCEXPORTMAT_READY		(1)
-#define CCEXPORTMAT_ACTIVE		(2)
+#define CCEXPORTMAT_ACTIVE	(2)
 #define CCEXPORTMAT_DIED		(3)
 
 #define MAXSIZE_T std::numeric_limits<std::size_t>::max()
@@ -104,7 +106,7 @@ definition which can change depending the compiler.
 			#define CCEXP_ERR(obj, errid, args...) { CECS_ERRI(CCEXPECS, 1, args) (obj).Errors.push_back(string("CECS Error captured!")); }
 			#define CCEXP_ERR_V(obj, errid, args...) { CECS_ERR(CCEXPECS, 1, args) (obj).Errors.push_back(string("CECS Error captured!")); }
 			#define CCEXP_ERR_T(obj, val, errid, args...) { CECS_ERRO(CCEXPECS, 1, { return (val); }, args) (obj).Errors.push_back(string("CECS Error captured!")); }
-			#define __CCEXP_ERR_DISPLAY(obj, N) { cerr << CCEXPECS.str() << endl; }
+			#define __CCEXP_ERR_DISPLAY(obj, N) { cerr << CCEXP::CCEXPECS.str() << endl; }
 		#else
 			#define CCEXP_ERR(obj, errid, str, args...) { \
 				char ccexp_errStr[2049]={0};\
@@ -308,7 +310,10 @@ class CCEXP {
 	MVECTOR<char> errorchar;
 
 	CCEXP();
-	CCEXP(const char* fname);
+#ifdef __CCEXP__USE_CECS
+	CCEXP(void* pCECS);
+#endif
+	CCEXP(const char* fname, void* pCECS = nullptr);
 	~CCEXP();
 	
 	size_t getTableIndexByName(const char* Name);

@@ -27,6 +27,9 @@ using namespace std;
 __USE_MVECTOR_NAMESPACE__
 
 namespace CCEXP {
+#ifdef __CCEXP__USE_CECS
+CECS CCEXPECS("CCEXP");
+#endif
 
 CCEXP::CCEXP() :
 	fp(NULL),
@@ -45,7 +48,28 @@ CCEXP::CCEXP() :
 	errorchar.clear();
 }
 
-CCEXP::CCEXP(const char* fname):
+#ifdef __CCEXP__USE_CECS
+CCEXP::CCEXP(void* pCECS) :
+	fp(NULL),
+	Status(CCEXPORTMAT_INIT),
+	STCounter(0),
+	isActive(true),
+	ErrorId(0),
+	lfp(NULL),
+	LoadTotalTables(0),
+	LoadTableIndex(0)
+{ 
+	CECS_ERRO(CCEXPECS, nullptr==pCECS, {Status=-10; return; }, "CCEXP Constructor: Used nullptr for CECS conn")
+	CCEXPECS.ConnectTo(pCECS);
+	SavingFile[0]=0;
+	SavingFile[1]=0;
+	__CCEXP_VECTOR_STEPS(errorchar,1,1);
+	__CCEXP_VECTOR_CLEAR(Errors);
+	errorchar.clear();
+}
+#endif
+
+CCEXP::CCEXP(const char* fname, void* pCECS):
 	fp(NULL),
 	Status(CCEXPORTMAT_INIT),
 	STCounter(0),
@@ -55,11 +79,20 @@ CCEXP::CCEXP(const char* fname):
 	LoadTotalTables(0),
 	LoadTableIndex(0)
 {
+#ifdef __CCEXP__USE_CECS
+	CECS_ERRO(CCEXPECS, nullptr==pCECS, {Status=-10; return; }, "CCEXP Constructor: Used nullptr for CECS conn")
+	CCEXPECS.ConnectTo(pCECS);
+#endif
 	SavingFile[0]=0;
 	SavingFile[1]=0;
 	__CCEXP_VECTOR_CLEAR(Errors);
 
 	Initialize(*this, fname);
+#ifndef __CCEXP__USE_CECS
+	if (nullptr!=pCECS) {
+		CCEXP_ERR_V((*this) , ERROR::Other , "Initialize():: pCECS not nullptr while __CCEXP__USE_CECS is set (%i)",0);
+	}
+#endif
 }
 
 CCEXP::~CCEXP() {

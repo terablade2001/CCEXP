@@ -24,6 +24,7 @@
 // Include the CCEXP library
 #include "../src/include/CCEXP.hpp"
 
+#ifdef __CCEXP__USE_CECS
 static CECS __ECSOBJ__("TestMod","Main-CECS");
 
 int t03_cecs_test(void* mv_) {
@@ -32,14 +33,13 @@ int t03_cecs_test(void* mv_) {
 	// But if there are multiple libraries that has CECS, there will be different
 	// static arrays and there might be different records on different arrays!
 	// The connection ensures that errors are passed to the same array.
-	CCEXPECS.ConnectTo(__ECSOBJ__.cecs());
 
 	#ifndef __CCEXP__USE_CECS
 		printf("__CCEXP__USE_CECS is not defined. This test can't run!");
 		return -1;
 	#endif
 	printf("t03:: Test Start ...\n");
-	CCEXP::CCEXP DBG("./t03.ccexp");
+	CCEXP::CCEXP DBG("./t03.ccexp", __ECSOBJ__.cecs());
 	try {
 		CCEXP::AddTable<int>(DBG,"Integers","int32_t");
 		_CHECKRT_
@@ -56,7 +56,7 @@ int t03_cecs_test(void* mv_) {
 	
 	std::cout << "-------- Continue after 1rst error capture -------------" << std::endl<< std::endl<< std::endl;
 	
-	CCEXP::CCEXP LD;
+	CCEXP::CCEXP LD(__ECSOBJ__.cecs());
 	try {
 		CCEXP::StoreData(DBG);
 		CCEXP::Reset(DBG);
@@ -97,3 +97,9 @@ int t03_cecs_test(void* mv_) {
 	}
 	return 0;
 }
+#else
+int t03_cecs_test(void* mv_) {
+	std::cout << "t03 works only with the \"__CCEXP__USE_CECS\" defined" << std::endl;
+	return 0;
+}
+#endif
