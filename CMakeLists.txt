@@ -46,8 +46,8 @@ if(LIB__MVECTOR)
 	message("####################################################################")
 	message("####################################################################")
 	message("")
+	include_directories(${CMAKE_CURRENT_LIST_DIR}/sub_modules/MVECTOR/src/include)
 	set (CXX_SRCS ${CXX_SRCS}
-		${CMAKE_CURRENT_LIST_DIR}/sub_modules/MVECTOR/src/include/MVECTOR.hpp
 		${CMAKE_CURRENT_LIST_DIR}/sub_modules/MVECTOR/src/MVECTOR.cpp
 	)
 endif(LIB__MVECTOR)
@@ -64,6 +64,7 @@ if(LIB__CECS)
 	message("####################################################################")
 	message("####################################################################")
 	message("")
+	include_directories(${CMAKE_CURRENT_LIST_DIR}/sub_modules/CECS/C++/src/include)
 	set (CXX_SRCS ${CXX_SRCS}
 		${CMAKE_CURRENT_LIST_DIR}/sub_modules/CECS/C++/src/CECS-c.cpp
 		${CMAKE_CURRENT_LIST_DIR}/sub_modules/CECS/C++/src/CECS.cpp

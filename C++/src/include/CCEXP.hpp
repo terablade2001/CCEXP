@@ -24,7 +24,7 @@
 #ifndef __CCEXP_HPP__
 #define __CCEXP_HPP__
 
-#define CCEXP_VERSION (0.078)
+#define CCEXP_VERSION (0.079)
 
 #define __CCEXP__USE_MVECTOR
 #define __CCEXP__USE_CECS
@@ -45,8 +45,8 @@
 	#define __CCEXP_VECTOR_STEPS(v,a,b) //..
 	#define __CCEXP_VECTOR_CLEAR(v) (v).clear(); (v).resize(0);
 #else
-	#include "../../../sub_modules/MVECTOR/src/include/MVECTOR.hpp"
-	// #include "MVECTOR.hpp"
+	// #include "../../../sub_modules/MVECTOR/src/include/MVECTOR.hpp"
+	#include <MVECTOR.hpp>
 	#define __USE_MVECTOR_NAMESPACE__ using namespace ns_MVECTOR;
 	#define __CCEXP_VECTOR_STEPS(v,a,b) (v).set_steps((a),(b));
 	#define __CCEXP_VECTOR_CLEAR(v) (v).clear();
@@ -56,8 +56,8 @@
 	#ifdef _MSC_VER
 		#error CECS is not yet supported with MSC. Undefine __CCEXP__USE_CECS definition at CCEXP.hpp
 	#endif
-	#include "../../../sub_modules/CECS/C++/src/include/CECS.hpp"
-	// #include "../../CECS/include/CECS.hpp"
+	// #include "../../../sub_modules/CECS/C++/src/include/CECS.hpp"
+	#include <CECS.hpp>
 	#ifndef __ECSOBJ__
 		#define __ECSOBJ__ ECS
 	#endif
