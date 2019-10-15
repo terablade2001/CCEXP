@@ -70,7 +70,7 @@ int t03_cecs_test(void* mv_) {
 		__ECSOBJ__.clear();
 		CCEXP::Reset(LD);
 		std::cout << "Test capture of 2nd error (wrong table name for loading)... " << std::endl;
-		std::cout<< std::endl<<"(*) Exception occured: "<< std::endl << "  --> " << e.what() << std::endl;
+		std::cout<< std::endl<<"(*) Exception occured: "<< std::endl << e.what() << std::endl;
 	}
 	
 	std::cout << "-------- Continue after 2nd error capture -------------" << std::endl<< std::endl<< std::endl;
@@ -93,7 +93,7 @@ int t03_cecs_test(void* mv_) {
 		
 		printf("t03:: Test Completed!\n");
 	} catch(std::exception &e) {
-		std::cout<< std::endl<<"(*) Exception occured: "<< std::endl << "  --> " << e.what() << std::endl;
+		std::cout<< std::endl<<"(*) Exception occured: "<< std::endl << e.what() << std::endl;
 	}
 	return 0;
 }
