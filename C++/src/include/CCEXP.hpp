@@ -24,7 +24,7 @@
 #ifndef __CCEXP_HPP__
 #define __CCEXP_HPP__
 
-#define CCEXP_VERSION (0.080)
+#define CCEXP_VERSION (0.081)
 
 #define __CCEXP__USE_MVECTOR
 #define __CCEXP__USE_CECS
