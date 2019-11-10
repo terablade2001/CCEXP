@@ -23,19 +23,21 @@
 
 // Include the CCEXP library
 #include "../src/include/CCEXP.hpp"
-
-// Demo/Debugging tool. Enable or Comment ERROR_STOP, to stop on Errors or
-// to force debugging behaviour and continue.
-// * For this UnitsTests Demo I have not set ERROR_STOP thus every error
-// just shows an error message and moves on. 
+CECS_MODULE("t01-Load")
 
 // #define ERROR_STOP
 #ifdef ERROR_STOP
-	#define _DBG_ERROR_STOP_OR_CONTINUE_(x) \
-		__CCEXP_ERR_DISPLAY((x),-1); if ((x).Status != 1) return (x).Status;
+	#define _DBG_ERROR_STOP_OR_CONTINUE_ {\
+		std::cout << endl << "_DBG_ERROR_STOP_OR_CONTINUE_: ["<< __FNAME__ <<", "<< __LINE__ << "] -->" << std::endl;\
+		_CERRI("Error detected. Aborting!");\
+	}
 #else
-	#define _DBG_ERROR_STOP_OR_CONTINUE_(x) \
-		__CCEXP_ERR_DISPLAY((x),-1); CCEXP::DBG_SetStatus((x), 1);
+	#define _DBG_ERROR_STOP_OR_CONTINUE_ \
+		std::cout << endl << "_DBG_ERROR_STOP_OR_CONTINUE_: ["<< __FNAME__ <<", "<< __LINE__ << "] -->" << std::endl;\
+		if (0!=_NERR_) {\
+			std::cout << __ECSOBJ__.str() << std::endl;\
+			_ECSCLS_\
+		}
 #endif
 
 
@@ -56,7 +58,7 @@ int t01_Load(void* mv_) {
 		CCEXP::AddTable <float>(DBG,"Table_float","single",9);
 		CCEXP::AddTable <int16_t>(DBG,"Table_i16","int16");
 		CCEXP::AddTable <size_t>(DBG,"Table_st","uint64");
-		_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+		_DBG_ERROR_STOP_OR_CONTINUE_;
 #ifdef __CCEXP__USE_MVECTOR
 	printf("[%s: %i]: #1 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
 #endif
@@ -74,19 +76,19 @@ int t01_Load(void* mv_) {
 			// I use error checking thus the program to be able to continue.
 			CCEXP::NewRow(DBG,"Table_float");
 			if (j >= 8) printf("\n\n**** TEST:: Error must occur at Line [%i]  *******",__LINE__+1);
-			_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+			_DBG_ERROR_STOP_OR_CONTINUE_;  DBG.Status = CCEXPORTMAT_READY;
 			
 			CCEXP::NewRow(DBG,"Table_i16");
 			CCEXP::NewRow(DBG,"Table_st");
 		}
-		_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+		_DBG_ERROR_STOP_OR_CONTINUE_;
 #ifdef __CCEXP__USE_MVECTOR
 	printf("[%s: %i]: #2 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
 #endif
 
 		CCEXP::StoreData(DBG);
 		CCEXP::Reset(DBG);
-		_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+		_DBG_ERROR_STOP_OR_CONTINUE_
 #ifdef __CCEXP__USE_MVECTOR
 	printf("[%s: %i]: #3 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
 #endif
@@ -111,22 +113,22 @@ int t01_Load(void* mv_) {
 #endif
 			// Test Loading the same table twice
 			CCEXP::LoadTable<uint8_t>(LD,"Table_u8","uint8");
-			_DBG_ERROR_STOP_OR_CONTINUE_(LD);
+			_DBG_ERROR_STOP_OR_CONTINUE_
 
 			// Test Loading wrong table format
 			CCEXP::LoadTable<float>(LD,"Table_i16","float");
 printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
-			_DBG_ERROR_STOP_OR_CONTINUE_(LD);
+			_DBG_ERROR_STOP_OR_CONTINUE_;  LD.Status = CCEXPORTMAT_READY;
 			
 			// Test Loading table that does not exist
 			CCEXP::LoadTable<int16_t>(LD,"Table_i166","int16_t");
 printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
-			_DBG_ERROR_STOP_OR_CONTINUE_(LD);
+			_DBG_ERROR_STOP_OR_CONTINUE_;  LD.Status = CCEXPORTMAT_READY;
 			
 			CCEXP::LoadTable<int16_t>(LD,"Table_i16","int16");
-			_DBG_ERROR_STOP_OR_CONTINUE_(LD);
+			_DBG_ERROR_STOP_OR_CONTINUE_;
 		CCEXP::Close(LD);
-		_DBG_ERROR_STOP_OR_CONTINUE_(LD);
+		_DBG_ERROR_STOP_OR_CONTINUE_;
 #ifdef __CCEXP__USE_MVECTOR
 	printf("[%s: %i]: #6 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
 #endif
@@ -157,11 +159,11 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	// Load the rest tables at LD.
 	CCEXP::Open(LD,"DataFile.ccexp");
 		CCEXP::LoadTable<float>(LD,"Table_float","single");
-		_DBG_ERROR_STOP_OR_CONTINUE_(LD);
+		_DBG_ERROR_STOP_OR_CONTINUE_;
 		CCEXP::LoadTable<size_t>(LD,"Table_st","uint64");
-		_DBG_ERROR_STOP_OR_CONTINUE_(LD);
+		_DBG_ERROR_STOP_OR_CONTINUE_;
 	CCEXP::Close(LD);
-	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
+	_DBG_ERROR_STOP_OR_CONTINUE_;
 	
 	NTables = CCEXP::NumberOfTables(LD);
 	printf("[%s: %i]: Tables in LD (Should be 5) : " __ZU__ "\n",__FNAME__,__LINE__, NTables);
@@ -173,22 +175,22 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 			CCEXP::NewRow(LD,"Table_u8");
 			CCEXP::AddVal(LD,"Table_u8", (uint8_t)(i));
 		}
-		_DBG_ERROR_STOP_OR_CONTINUE_(LD);
+		_DBG_ERROR_STOP_OR_CONTINUE_;
 	
 		// Increase Rows of a loaded table which is already limited to _maxRows!
 		for (int i = 0; i < 2; i++) {
 			CCEXP::NewRow(LD,"Table_float");
 printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
-			_DBG_ERROR_STOP_OR_CONTINUE_(LD);
+			_DBG_ERROR_STOP_OR_CONTINUE_;  LD.Status = CCEXPORTMAT_READY;
 			CCEXP::AddVal(LD,"Table_float",(float)(i+0.5f));
 		}
-		_DBG_ERROR_STOP_OR_CONTINUE_(LD);
+		_DBG_ERROR_STOP_OR_CONTINUE_;
 
 	// Test NoNewRow(): It actually cancels the NewRow() operation.
 	CCEXP::NewRow(LD,"Table_st");
 	CCEXP::NoNewRow(LD,"Table_st");
 	CCEXP::AddVal(LD,"Table_st",999);
-	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
+	_DBG_ERROR_STOP_OR_CONTINUE_;
 	
 	// Display the Tables now in LD.
 	// * Table 'Table_u8' should have 12 rows
@@ -208,7 +210,7 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	// If the LD object has not been initialized, an on-runtime name can be
 	// given to store there directly. This approach however is not recommended.
 	CCEXP::StoreData(LD,"Output.ccexp");
-	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
+	_DBG_ERROR_STOP_OR_CONTINUE_;
 	
 	
 	// Test getRow(). Notice that we have 3+3+2 values:
@@ -218,7 +220,7 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	// 2 data when later on at LD object I tried to add 2 new rows which also
 	//   failed due to the _maxRows = 9 restriction.
 	MVECTOR<float>* fv = CCEXP::getRow<float>(LD,"Table_float",8);
-	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
+	_DBG_ERROR_STOP_OR_CONTINUE_;
 	if (fv != NULL) {
 		printf("\n\nTable_float, Row=8 values:\n >> ");
 		for (size_t i = 0; i < fv->size(); i++)	printf("%2.3f ",(*fv)[i]);
@@ -235,12 +237,12 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	}
 	printf("\n");
 printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
-	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
+	_DBG_ERROR_STOP_OR_CONTINUE_;  LD.Status = CCEXPORTMAT_READY;
 	
 	// Test overloaded getRow(), which return pointer and columns number.
 	size_t cols = 0;
 	float* f = CCEXP::getRow<float>(LD,"Table_float",8, cols);
-	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
+	_DBG_ERROR_STOP_OR_CONTINUE_;
 	if (f != NULL) {
 		printf("\n\nTable_float, Row=8 values:\n >> ");
 		for (size_t i = 0; i < cols; i++)	printf("%2.3f ",f[i]);
@@ -256,5 +258,6 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 		__FNAME__,__LINE__, ((MVECTOR<char>*)mv_)->total_bytes()
 	);
 #endif
+
 	return 0;
 }

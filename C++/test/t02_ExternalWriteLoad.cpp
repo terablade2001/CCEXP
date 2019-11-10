@@ -24,21 +24,25 @@
 // Include the CCEXP library
 #include "../src/include/CCEXP.hpp"
 
-// Demo/Debugging tool. Enable or Comment ERROR_STOP, to stop on Errors or
-// to force debugging behaviour and continue.
-// * For this UnitsTests Demo I have not set ERROR_STOP thus every error
-// just shows an error message and moves on. 
+CECS_MODULE("t02-ExtWriteLoad")
 
-#define ERROR_STOP
+// #define ERROR_STOP
 #ifdef ERROR_STOP
-	#define _DBG_ERROR_STOP_OR_CONTINUE_(x) \
-		__CCEXP_ERR_DISPLAY((x),-1); if ((x).Status != 1) return (x).Status;
-#else	
-	#define _DBG_ERROR_STOP_OR_CONTINUE_(x) \
-		__CCEXP_ERR_DISPLAY((x),-1); CCEXP::DBG_SetStatus((x), 1);
+	#define _DBG_ERROR_STOP_OR_CONTINUE_ {\
+		std::cout << endl << "_DBG_ERROR_STOP_OR_CONTINUE_: ["<< __FNAME__ <<", "<< __LINE__ << "] -->" << std::endl;\
+		_CERRI("Error detected. Aborting!");\
+	}
+#else
+	#define _DBG_ERROR_STOP_OR_CONTINUE_ \
+		std::cout << endl << "_DBG_ERROR_STOP_OR_CONTINUE_: ["<< __FNAME__ <<", "<< __LINE__ << "] -->" << std::endl;\
+		if (0!=_NERR_) {\
+			std::cout << __ECSOBJ__.str() << std::endl;\
+			_ECSCLS_\
+		}
 #endif
 
 int t02_ExternalWriteLoad(void* mv_) {
+
 #ifdef __CCEXP__USE_MVECTOR
 	MVECTOR<char> Mem;
 #endif
@@ -52,13 +56,14 @@ int t02_ExternalWriteLoad(void* mv_) {
 		CCEXP::LoadTable<float>(LD,"Table_1","single");
 		CCEXP::LoadTable<uint8_t>(LD,"Table_2","uint8");
 	CCEXP::Close(LD);
-	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
+	_CERRI("Generate SharedData.ccexp using [t02_ExternalWriteLoad.m] file.")
+	_DBG_ERROR_STOP_OR_CONTINUE_;
 #ifdef __CCEXP__USE_MVECTOR
 	printf("[%s: %i]: #2 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
 #endif
 	size_t Rows_1 = CCEXP::Rows(LD, "Table_1");
 	size_t Rows_2 = CCEXP::Rows(LD, "Table_2");
-	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
+	_DBG_ERROR_STOP_OR_CONTINUE_;
 	
 	cout << endl << "Table_1 has [" << Rows_1 <<
 	  "] rows, while Table_2 has [" << Rows_2 <<
@@ -90,7 +95,7 @@ int t02_ExternalWriteLoad(void* mv_) {
 		cout << "]" << endl;
 	}
 
-	_DBG_ERROR_STOP_OR_CONTINUE_(LD);
+	_DBG_ERROR_STOP_OR_CONTINUE_;
 
 	printf("\n... t02_ExternalWriteLoad() call ending ...\n");
 #ifdef __CCEXP__USE_MVECTOR

@@ -24,8 +24,7 @@
 // Include the CCEXP library
 #include "../src/include/CCEXP.hpp"
 
-#ifdef __CCEXP__USE_CECS
-static CECS __ECSOBJ__("TestMod","Main-CECS");
+CECS_MODULE("t03-cecs")
 
 int t03_cecs_test(void* mv_) {
 	// A good tactic is to connect different objects. In this example both
@@ -34,10 +33,6 @@ int t03_cecs_test(void* mv_) {
 	// static arrays and there might be different records on different arrays!
 	// The connection ensures that errors are passed to the same array.
 
-	#ifndef __CCEXP__USE_CECS
-		printf("__CCEXP__USE_CECS is not defined. This test can't run!");
-		return -1;
-	#endif
 	printf("t03:: Test Start ...\n");
 	CCEXP::CCEXP DBG("./t03.ccexp", __ECSOBJ__.cecs());
 	try {
@@ -49,7 +44,8 @@ int t03_cecs_test(void* mv_) {
 		CCEXP::AddRow<int>(DBG,"Integersx",vals,5);
 		_CHECKRT_
 	} catch(std::exception &e) {
-		__ECSOBJ__.clear();
+		_ECSCLS_
+		DBG.Status = CCEXPORTMAT_READY;
 		std::cout << "Test capture of 1rst error (wrong table name for AddRow)... " << std::endl;
 		std::cout<< std::endl<<"(*) Exception occured: "<< std::endl << "  --> " << e.what() << std::endl;
 	}
@@ -67,7 +63,7 @@ int t03_cecs_test(void* mv_) {
 		CCEXP::Close(LD);
 		_CHECKRT_
 	} catch(std::exception &e) {
-		__ECSOBJ__.clear();
+		_ECSCLS_
 		CCEXP::Reset(LD);
 		std::cout << "Test capture of 2nd error (wrong table name for loading)... " << std::endl;
 		std::cout<< std::endl<<"(*) Exception occured: "<< std::endl << e.what() << std::endl;
@@ -95,11 +91,6 @@ int t03_cecs_test(void* mv_) {
 	} catch(std::exception &e) {
 		std::cout<< std::endl<<"(*) Exception occured: "<< std::endl << e.what() << std::endl;
 	}
+
 	return 0;
 }
-#else
-int t03_cecs_test(void* mv_) {
-	std::cout << "t03 works only with the \"__CCEXP__USE_CECS\" defined" << std::endl;
-	return 0;
-}
-#endif

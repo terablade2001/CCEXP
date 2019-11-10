@@ -9,6 +9,7 @@ Having a clean git repository (i.e. 'git clean -dfx') use the following commands
 ```
 mkdir build && cd build
 cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release ..
+# cmake -G "Visual Studio 14 2015 Win64" -DCMAKE_BUILD_TYPE=Release ..
 make && cls && CCEXP t00
 ```
 

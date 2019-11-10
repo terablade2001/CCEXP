@@ -8,14 +8,13 @@ cmake_minimum_required(VERSION 2.8.11)
 project(CCEXP)
 
 if (MINGW)
-	set(CXX_FLAGS "-std=c++11 -Wall")
+	set(CXX_FLAGS "-std=c++11 -Wall -D__ECSOBJ__=ECS")
 endif(MINGW)
 if (UNIX)
-	set(CXX_FLAGS "-std=c++11 -Wall -Wno-unused-result")
+	set(CXX_FLAGS "-std=c++11 -Wall -Wno-unused-result -D__ECSOBJ__=ECS")
 endif(UNIX)
 
 set(LIB__MVECTOR ON)
-set(LIB__CECS ON)
 
 
 set(CMAKE_CONFIGURATION_TYPES "Release")
@@ -52,24 +51,13 @@ if(LIB__MVECTOR)
 	)
 endif(LIB__MVECTOR)
 
-if(LIB__CECS)
-	message("")
-	message("####################################################################")
-	message("#############     Using also CECS library        ###################")
-	message("####################################################################")
-	message("  -> Clone Recusive: git clone --recursive https://github.com/terablade2001/CCEXP")
-	message("  -> Or update submodules: git submodule init")
-	message("                           git submodule update")	
-	message("####################################################################")
-	message("####################################################################")
-	message("####################################################################")
-	message("")
-	include_directories(${CMAKE_CURRENT_LIST_DIR}/sub_modules/CECS/C++/src/include)
-	set (CXX_SRCS ${CXX_SRCS}
-		${CMAKE_CURRENT_LIST_DIR}/sub_modules/CECS/C++/src/CECS-c.cpp
-		${CMAKE_CURRENT_LIST_DIR}/sub_modules/CECS/C++/src/CECS.cpp
-	)
-endif(LIB__CECS)
+
+include_directories(${CMAKE_CURRENT_LIST_DIR}/sub_modules/CECS/C++/src/include)
+set (CXX_SRCS ${CXX_SRCS}
+	${CMAKE_CURRENT_LIST_DIR}/sub_modules/CECS/C++/src/CECS-c.cpp
+	${CMAKE_CURRENT_LIST_DIR}/sub_modules/CECS/C++/src/CECS.cpp
+)
+
 
 add_executable(CCEXP ${CXX_SRCS})
 target_link_libraries(CCEXP ${LINK_OPTIONS})

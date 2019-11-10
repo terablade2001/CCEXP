@@ -66,11 +66,13 @@ function CCEXP_WRITE(fname,V)
 		fwrite(fp, DPL, size_t);
 
 		% Store the data for every row..
-		Data = V{i}{1,4}{j};
-		DataDims = length(size(Data));
-		PermuteIDX = [1:DataDims];
-		PermuteIDX(1:2)=[2 1];
-		Data=permute(Data,PermuteIDX);
-		for j=1:N; fwrite(fp, Data(:), V{i}{1,2}); end;
+		for j=1:N
+			Data = V{i}{1,4}{j};
+			DataDims = length(size(Data));
+			PermuteIDX = [1:DataDims];
+			PermuteIDX(1:2)=[2 1];
+			Data=permute(Data,PermuteIDX);
+			fwrite(fp, Data(:), V{i}{1,2});
+		end
 	end
 	fclose(fp);

@@ -23,7 +23,11 @@
 
 // Include the MVECTOR library
 #include "../src/include/CCEXP.hpp"
-
+#ifndef __ECSOBJ__
+	CECS_MODULE("Main")
+#else
+	CECS_MAIN_MODULE("Main","CECS::Main")
+#endif
 __USE_MVECTOR_NAMESPACE__
 
 int t00_Basics(void* mv_);
@@ -35,37 +39,42 @@ int t03_cecs_test(void* mv_);
 	MVECTOR<char> MainMem;
 #endif
 int main(int argc, char **argv) {
-	int RunTest = -1;
-	if (argc  < 2)
-		printf("Please use one of the following:\n"
-			"1) CCEXP t00\n"
-			"2) CCEXP t01\n"
-			"3) CCEXP t02\n"
-			"4) CCEXP t03\n"
-		);
-	for(int i = 1; i < argc; i++ ) {
-				 if( !strcmp( argv[i], "t00" )) RunTest = 0;
-		else if( !strcmp( argv[i], "t01" )) RunTest = 1;
-		else if( !strcmp( argv[i], "t02" )) RunTest = 2;
-		else if( !strcmp( argv[i], "t03" )) RunTest = 3;
-		else { int ii=i-1;
-			printf("Error >> Unrecognized command: [%s %s].\n"
-				"Please check the commands syntax (append option: [-help]).\n"
-				"Aborting...\n\n\n",argv[++ii],argv[++i]			
+	try {
+		int RunTest = -1;
+		if (argc  < 2)
+			printf("Please use one of the following:\n"
+				"1) CCEXP t00\n"
+				"2) CCEXP t01\n"
+				"3) CCEXP t02\n"
+				"4) CCEXP t03\n"
 			);
-			return -1;
+		for(int i = 1; i < argc; i++ ) {
+					 if( !strcmp( argv[i], "t00" )) RunTest = 0;
+			else if( !strcmp( argv[i], "t01" )) RunTest = 1;
+			else if( !strcmp( argv[i], "t02" )) RunTest = 2;
+			else if( !strcmp( argv[i], "t03" )) RunTest = 3;
+			else { int ii=i-1;
+				printf("Error >> Unrecognized command: [%s %s].\n"
+					"Please check the commands syntax (append option: [-help]).\n"
+					"Aborting...\n\n\n",argv[++ii],argv[++i]			
+				);
+				return -1;
+			}
 		}
+
+				 if (RunTest == 0) t00_Basics((void*)&MainMem);
+		else if (RunTest == 1) t01_Load((void*)&MainMem);
+		else if (RunTest == 2) t02_ExternalWriteLoad((void*)&MainMem);
+		else if (RunTest == 3) t03_cecs_test((void*)&MainMem);
+		_CERRT("Failed to run test %2.i...", RunTest)
+
+	#ifdef __CCEXP__USE_MVECTOR
+		printf("[%s: %i]: Main(): Total MVECTOR Bytes main() exits: " __ZU__ "\n",
+			__FNAME__,__LINE__, MainMem.total_bytes()
+		);
+	#endif
+	} catch(std::exception &e) {
+		std::cout<< std::endl<<"(*) Exception occured: "<< std::endl << "  --> " << e.what() << std::endl;
 	}
-
-			 if (RunTest == 0) t00_Basics((void*)&MainMem);
-	else if (RunTest == 1) t01_Load((void*)&MainMem);
-	else if (RunTest == 2) t02_ExternalWriteLoad((void*)&MainMem);
-	else if (RunTest == 3) t03_cecs_test((void*)&MainMem);
-
-#ifdef __CCEXP__USE_MVECTOR
-	printf("[%s: %i]: Main(): Total MVECTOR Bytes main() exits: " __ZU__ "\n",
-		__FNAME__,__LINE__, MainMem.total_bytes()
-	);
-#endif
 	return 0;
 }

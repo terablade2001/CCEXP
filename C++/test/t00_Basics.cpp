@@ -24,6 +24,7 @@
 // Include the CCEXP library
 #include "../src/include/CCEXP.hpp"
 
+CECS_MODULE("t00-Basics")
 // Demo/Debugging tool. Enable or Comment ERROR_STOP, to stop on Errors or
 // to force debugging behaviour and continue.
 // * For this UnitsTests Demo I have not set ERROR_STOP thus every error
@@ -31,24 +32,32 @@
 
 // #define ERROR_STOP
 #ifdef ERROR_STOP
-	#define _DBG_ERROR_STOP_OR_CONTINUE_(x) \
-		__CCEXP_ERR_DISPLAY((x),-1); if ((x).Status != 1) return (x).Status;
-#else	
-	#define _DBG_ERROR_STOP_OR_CONTINUE_(x) \
-		__CCEXP_ERR_DISPLAY((x),-1); CCEXP::DBG_SetStatus((x), 1);
+	#define _DBG_ERROR_STOP_OR_CONTINUE_ {\
+		std::cout << endl << "_DBG_ERROR_STOP_OR_CONTINUE_: ["<< __FNAME__ <<", "<< __LINE__ << "] -->" << std::endl;\
+		_CERRI("Error detected. Aborting!");\
+	}
+#else
+	#define _DBG_ERROR_STOP_OR_CONTINUE_ \
+		std::cout << endl << "_DBG_ERROR_STOP_OR_CONTINUE_: ["<< __FNAME__ <<", "<< __LINE__ << "] -->" << std::endl;\
+		if (0!=_NERR_) {\
+			std::cout << __ECSOBJ__.str() << std::endl;\
+			_ECSCLS_\
+		}
 #endif
 
 // Define a CCEXP object (DBG)
 static CCEXP::CCEXP DBG;
 
 int t00_Basics(void* mv_) {
+	_DBG_ERROR_STOP_OR_CONTINUE_
+
 #ifdef __CCEXP__USE_MVECTOR
 	MVECTOR<char> Mem;
 #endif
 	// Initialize DBG object, and set it a Filename where it will store
 	// it's data when CCEXP::StoreData() fuction is called.
 	CCEXP::Initialize(DBG,"DataFile.ccexp");
-	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+	_DBG_ERROR_STOP_OR_CONTINUE_
 #ifdef __CCEXP__USE_MVECTOR
 	printf("[%s: %i]: #1 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
 #endif
@@ -57,21 +66,31 @@ int t00_Basics(void* mv_) {
 	// Do a second initialization.. This will procude an error!
 		CCEXP::Initialize(DBG,"DataFile.ccexp");	
 printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
-		_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+		_DBG_ERROR_STOP_OR_CONTINUE_
 #ifdef __CCEXP__USE_MVECTOR
 	printf("[%s: %i]: #2 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
 #endif
 
+		CCEXP::Reset(DBG);
+		CCEXP::Initialize(DBG,"DataFile.ccexp");
+		_DBG_ERROR_STOP_OR_CONTINUE_
+		
 	// Add Tables
     CCEXP::AddTable <uint8_t>(DBG,"T_U8","uint8");
+		_DBG_ERROR_STOP_OR_CONTINUE_
 	// Add the same table twice. This also must produce an error.
 		CCEXP::AddTable <float>(DBG,"T_U8","uint8");
 printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
-		_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+		_DBG_ERROR_STOP_OR_CONTINUE_
 #ifdef __CCEXP__USE_MVECTOR
 	printf("[%s: %i]: #3 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
 #endif
 
+	CCEXP::Reset(DBG);
+	CCEXP::Initialize(DBG,"DataFile.ccexp");
+	_DBG_ERROR_STOP_OR_CONTINUE_
+	
+	CCEXP::AddTable <uint8_t>(DBG,"T_U8","uint8");
 	CCEXP::AddTable <float>(DBG,"T_F32","single");
 	CCEXP::AddTable <uint8_t>(DBG,"TestMaxR","uint8",3);
 	CCEXP::AddTable <int>(DBG,"AddVal","int32");
@@ -82,15 +101,18 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	CCEXP::AddTable <int>(DBG,"SetVal","int32");
 	CCEXP::AddTable <int>(DBG,"InitRowByScalar","int32");
 	CCEXP::AddTable <size_t>(DBG,"getTableID","uint64");
+	_DBG_ERROR_STOP_OR_CONTINUE_
 	
 	// Add a third table, but for this 'debug-session' ignore it completely.
 	// If need to re-enable it, just remove letter I
   CCEXP::AddTable <char>(DBG,"T_Char","char");
+	_DBG_ERROR_STOP_OR_CONTINUE_
 
 	// Add a string to the T_Char Table. If need to store that table too,
 	// then change the corresponded called function AddTableI() to AddTable()!
 	char TestString[256] = "Hello World!";
 	CCEXP::AddRow<char>(DBG,"T_Char",TestString,256);
+	_DBG_ERROR_STOP_OR_CONTINUE_
 
 	uint8_t* pU8 = new uint8_t[256];
 	float* pF32 = new float[256];
@@ -111,7 +133,7 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	}
 
 	// Until the below line, there should not be any error.
-	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+	_DBG_ERROR_STOP_OR_CONTINUE_;
 #ifdef __CCEXP__USE_MVECTOR
 	printf("\n");
 	printf("[%s: %i]: #4 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
@@ -122,24 +144,24 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	 // to 3 (by AddMatrix()). Thus errors should hit after 3 max lines.
 	for (int row = 0; row < 5; row++)
 		CCEXP::NewRow(DBG, 2, 1);
-size_t n_errors;
-printf("%s\n", CCEXP::GetErrors(DBG, n_errors)); // Display the error as simple char sequence.
-printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
-	_DBG_ERROR_STOP_OR_CONTINUE_(DBG); 
+	
+	printf("Get __ECSOBJ__ Errors:\n%s\n", __ECSOBJ__.str()); // Display the error as simple char sequence.
+	printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
+	_DBG_ERROR_STOP_OR_CONTINUE_; DBG.Status = CCEXPORTMAT_READY;
 #ifdef __CCEXP__USE_MVECTOR
 	printf("[%s: %i]: #5 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
 #endif
-	
+
 	size_t R0 = CCEXP::Rows(DBG, "T_U8");
 	printf("\nTable T_U8 has [" __ZU__ "] rows\n", R0);
-	
+	_DBG_ERROR_STOP_OR_CONTINUE_;
 
 	size_t SelRow = 255;
 	size_t C0 = CCEXP::Cols(DBG, "T_U8", SelRow);
 	printf("\nRow [" __ZU__ "] of Table T_U8 has [" __ZU__ "] columns\n", SelRow, (size_t)C0);
 	
 	// After TestMaxR table, no more errors should exist in the following test.
-	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+	_DBG_ERROR_STOP_OR_CONTINUE_;
 #ifdef __CCEXP__USE_MVECTOR
 	printf("[%s: %i]: #6 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
 #endif
@@ -149,12 +171,12 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	// Error must occur in the following call.
 		SelRow = 512; C0 = CCEXP::Cols(DBG, "T_U8", SelRow);
 printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
-		_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+		_DBG_ERROR_STOP_OR_CONTINUE_; DBG.Status = CCEXPORTMAT_READY;
 	
 	// Test Rows Error handling (False Table Name)
 	SelRow = 512; C0 = CCEXP::Cols(DBG, "T_UU88", SelRow);
 printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
-	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+	_DBG_ERROR_STOP_OR_CONTINUE_; DBG.Status = CCEXPORTMAT_READY;
 #ifdef __CCEXP__USE_MVECTOR
 	printf("\n");
 	printf("[%s: %i]: #7 : Total Bytes: " __ZU__ "\n",__FNAME__,__LINE__, Mem.total_bytes() );
@@ -184,7 +206,7 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	}
 	CCEXP::DeleteRow(DBG,"DeleteRow",3);
 	CCEXP::DeleteRow(DBG,"DeleteRow",8);
-	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+	_DBG_ERROR_STOP_OR_CONTINUE_; DBG.Status = CCEXPORTMAT_READY;
 	
 	// Test "DeleteLastElement"
 	for (int j=0; j < 3; j++) {
@@ -218,21 +240,21 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	for (int i=0; i < 5; i++) CCEXP::AddVal(DBG,"SetVal",i);
 	CCEXP::SetVal<int>(DBG,"SetVal",0,2,-11);
 	CCEXP::SetVal<int>(DBG,"SetVal",0,4,-12);
-	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+	_DBG_ERROR_STOP_OR_CONTINUE_; DBG.Status = CCEXPORTMAT_READY;
 	
 	// Test "InitRowByScalar"
 	CCEXP::InitRowByScalar(DBG,"InitRowByScalar",-1,7,3);
 	CCEXP::InitRowByScalar(DBG,"InitRowByScalar",-1,7,4);
 	CCEXP::InitRowByScalar(DBG,"InitRowByScalar",0,3,2);
 	CCEXP::InitRowByScalar(DBG,"InitRowByScalar",-1,0,0);
-	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+	_DBG_ERROR_STOP_OR_CONTINUE_; DBG.Status = CCEXPORTMAT_READY;
 	
 	// Test "GetTableID"
 	size_t TableID;
 	TableID = CCEXP::getTableID(DBG,"AddVal");            CCEXP::AddVal(DBG,"getTableID",TableID);
 	TableID = CCEXP::getTableID(DBG,"DeleteLastElement"); CCEXP::AddVal(DBG,"getTableID",TableID);
 	TableID = CCEXP::getTableID(DBG,"SetVal");            CCEXP::AddVal(DBG,"getTableID",TableID);
-	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+	_DBG_ERROR_STOP_OR_CONTINUE_; DBG.Status = CCEXPORTMAT_READY;
 	
 	// Test "getTableName"
 	printf("\n\n");
@@ -243,12 +265,12 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	printf("Table Name of Table with ID (%i) is: %s\n", 5, TableName);
 	TableName = CCEXP::getTableName(DBG,8);
 	printf("Table Name of Table with ID (%i) is: %s\n", 8, TableName);
-	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+	_DBG_ERROR_STOP_OR_CONTINUE_; DBG.Status = CCEXPORTMAT_READY;
 	
 	// Display DBG tables
 	printf("\n---------- Display DBG object's tables: ------------------------\n");
 	__CCEXP_PRINT_TABLES__(DBG)
-	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+	_DBG_ERROR_STOP_OR_CONTINUE_; DBG.Status = CCEXPORTMAT_READY;
 	printf("----------------------------------------------------------------\n\n");
 
 #ifdef __CCEXP__USE_MVECTOR
@@ -257,6 +279,7 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	// Store all DBG data. This will clear the data of all Tables,
 	// but will not remove the tables; you can re-add new data.
     CCEXP::StoreData(DBG);
+		_DBG_ERROR_STOP_OR_CONTINUE_; DBG.Status = CCEXPORTMAT_READY;
 
 #ifdef __CCEXP__USE_MVECTOR
 	printf("\n\n\n");
@@ -265,6 +288,7 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	// Reset the DBG object. Everything is cleared. Need to Initialize
 	// again in order to use it again!
 	CCEXP::Reset(DBG);
+	_DBG_ERROR_STOP_OR_CONTINUE_; DBG.Status = CCEXPORTMAT_READY;
 
 #ifdef __CCEXP__USE_MVECTOR
 	printf("--- MVECTOR Size after Reset: " __ZU__ " bytes. \n", Mem.total_bytes());
@@ -280,7 +304,7 @@ printf("\n\n**** TEST:: Error must occur at Line [%i]! *******",__LINE__+1);
 	// Display DBG tables
 	printf("\n---------- Display DataFile.ccexp tables: ----------------------\n");
 	__CCEXP_PRINT_TABLES__("DataFile.ccexp")
-	_DBG_ERROR_STOP_OR_CONTINUE_(DBG);
+	_DBG_ERROR_STOP_OR_CONTINUE_; DBG.Status = CCEXPORTMAT_READY;
 	printf("----------------------------------------------------------------\n\n");
 
 	return 0;
