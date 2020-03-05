@@ -1,6 +1,6 @@
 # MIT License
 
-# Copyright (c) 2016 - 2019 Vasileios Kon. Pothos (terablade2001)
+# Copyright (c) 2016 - 2020 Vasileios Kon. Pothos (terablade2001)
 # https://github.com/terablade2001/CCEXP
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,7 +23,7 @@
 from setuptools import setup
 
 setup(name='ccexp',
-      version='0.018',
+      version='0.103',
       description='CCEXP Data file reading/writing module',
       url='https://github.com/terablade2001/CCEXP/',
       author='Vasileios Kon. Pothos',

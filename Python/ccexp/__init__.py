@@ -1,7 +1,7 @@
 #! /user/bin/env python
 # MIT License
 
-# Copyright (c) 2016 - 2019 Vasileios Kon. Pothos (terablade2001)
+# Copyright (c) 2016 - 2020 Vasileios Kon. Pothos (terablade2001)
 # https://github.com/terablade2001/CCEXP
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,6 +21,9 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+
+# Version 0.103
+
 import sys
 import struct
 

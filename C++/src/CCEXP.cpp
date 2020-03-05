@@ -1,6 +1,6 @@
 // MIT License
 
-// Copyright (c) 2016 - 2017 Vasileios Kon. Pothos (terablade2001)
+// Copyright (c) 2016 - 2020 Vasileios Kon. Pothos (terablade2001)
 // https://github.com/terablade2001/CCEXP
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -167,8 +167,8 @@ size_t StoreIData(CCEXP &obj) {
 	if (!obj.isActive) return RetV;
 	CECS_ERRI(CCEXPECS,obj.Status!=CCEXPORTMAT_READY,"[%s]: StoreIData():: Wrong status (%i) detected!" , obj.SavingFile, obj.Status );
 	obj.Status = CCEXPORTMAT_ACTIVE;
-	char fname[257]={0};
-	ccexp_snprintf(fname, 256, "%s.%4.4i", obj.SavingFile, obj.STCounter++);
+	char fname[385]={0};
+	ccexp_snprintf(fname, 384, "%s.%4.4i", obj.SavingFile, obj.STCounter++);
 	StoreData(obj, fname);
 	if (obj.ErrorId != 0) {
 		CECS_ERRI(CCEXPECS,1,"[%s]: StoreIData():: Call to StoreData() failed...", obj.SavingFile);

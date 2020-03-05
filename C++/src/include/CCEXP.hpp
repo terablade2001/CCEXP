@@ -1,6 +1,6 @@
 // MIT License
 
-// Copyright (c) 2016 - 2019 Vasileios Kon. Pothos (terablade2001)
+// Copyright (c) 2016 - 2020 Vasileios Kon. Pothos (terablade2001)
 // https://github.com/terablade2001/CCEXP
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,7 +24,7 @@
 #ifndef __CCEXP_HPP__
 #define __CCEXP_HPP__
 
-#define CCEXP_VERSION (0.102)
+#define CCEXP_VERSION (0.103)
 
 #define __CCEXP__USE_MVECTOR
 
