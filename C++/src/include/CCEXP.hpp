@@ -24,7 +24,7 @@
 #ifndef __CCEXP_HPP__
 #define __CCEXP_HPP__
 
-#define CCEXP_VERSION (0.103)
+#define CCEXP_VERSION (0.104)
 
 #define __CCEXP__USE_MVECTOR
 
@@ -467,6 +467,8 @@ size_t NumberOfTables(CCEXP &obj);
 void   DBG_SetStatus(CCEXP &obj, int status);
 int    Analyze(CCEXP &obj, MVECTOR<MVECTOR<char>> &v);
 int    Analyze(const char* filename, MVECTOR<MVECTOR<char>> &v, int flag = 0);
+void*  getCECS();
+const char* getCECSErrors(int typeId=_CECS_ERRTYPE_ALL);
 
 //@#: ############### Templates API Functions ###############
 template<class T> inline void AddTable (

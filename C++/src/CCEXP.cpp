@@ -555,4 +555,12 @@ int Analyze(const char* filename, MVECTOR<MVECTOR<char>> &v, int flag) {
 	return 0;
 }
 
+void*  getCECS() {
+	return CCEXPECS.cecs();
+}
+const char* getCECSErrors(int typeId) {
+	return CCEXPECS.str(typeId);
+}
+
+
 }; // namespace CCEXP;
