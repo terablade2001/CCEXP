@@ -21,7 +21,7 @@
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 % SOFTWARE.
 
-% Version 0.103
+% Version 0.105
 
 function [r, d] = CCEXP(fname, logg)
 	if (nargin == 1); logg = 0; end;
@@ -82,7 +82,7 @@ function [r, d] = CCEXP(fname, logg)
 		end
 		r(i).size = DPL;
 		d.(r(i).name) = r(i).data;
-		d.(['s' (r(i).name)]) = r(i).size;
+		% d.(['s' (r(i).name)]) = r(i).size;
 	end
 	fclose(fp);
 
