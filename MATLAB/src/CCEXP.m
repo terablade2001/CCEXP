@@ -21,7 +21,7 @@
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 % SOFTWARE.
 
-% Version 0.105
+% Version 0.106
 
 function [r, d] = CCEXP(fname, logg)
 	if (nargin == 1); logg = 0; end;
@@ -68,6 +68,11 @@ function [r, d] = CCEXP(fname, logg)
 		TB = sum(DPL); % Calculate total elements of the table
 
 		data = fread(fp, TB, [r(i).type '=>' r(i).type])'; % Load all the elements casted to the correct type.
+
+		if (TB ~= length(data))
+				fprintf('Table [%s]: Expected to load %i elements in %i rows but loaded only %i elements\n',name,TB,NumOfRows,length(data));
+				error('Wrong number of elements loaded')
+		end
 
 		% Update the r-Structure.
 		r(i).data = {};

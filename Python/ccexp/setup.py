@@ -23,7 +23,7 @@
 from setuptools import setup
 
 setup(name='ccexp',
-      version='0.105',
+      version='0.106',
       description='CCEXP Data file reading/writing module',
       url='https://github.com/terablade2001/CCEXP/',
       author='Vasileios Kon. Pothos',

@@ -21,7 +21,7 @@
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 % SOFTWARE.
 
-% Version 0.105
+% Version 0.106
 
 function CCEXP_WRITE(fname,V)
 	% Setup size_t variable definition
