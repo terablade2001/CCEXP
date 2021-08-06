@@ -1,6 +1,6 @@
 // MIT License
 
-// Copyright (c) 2016 - 2020 Vasileios Kon. Pothos (terablade2001)
+// Copyright (c) 2016 - 2021 Vasileios Kon. Pothos (terablade2001)
 // https://github.com/terablade2001/CCEXP
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,6 +22,10 @@
 // SOFTWARE.
 
 #include "include/CCEXP.hpp"
+
+#ifndef __CCEXP__USE_VECTOR_INSTEAD_OF_LIST
+#pragma message "CCEXP:: Using std::list for Tables rows"
+#endif
 
 using namespace std;
 __USE_MVECTOR_NAMESPACE__
@@ -46,7 +50,7 @@ CCEXP::CCEXP() :
 	lfp(NULL),
 	LoadTotalTables(0),
 	LoadTableIndex(0)
-{ 
+{
 	SavingFile[0]=0;
 	SavingFile[1]=0;
 }
@@ -60,7 +64,7 @@ CCEXP::CCEXP(void* pCECS) :
 	lfp(NULL),
 	LoadTotalTables(0),
 	LoadTableIndex(0)
-{ 
+{
 	CCEXPECS.ConnectTo(pCECS);
 	SavingFile[0]=0;
 	SavingFile[1]=0;
@@ -93,7 +97,7 @@ size_t CCEXP::getTableIndexByName(const char* Name) {
 	size_t sel = MAXSIZE_T;
 	for (size_t i = 0; i < M.size(); i++)
 		if ((M[i])->CompareName(Name) == 0) { sel=i; break; }
-	return sel;	
+	return sel;
 }
 
 size_t CCEXP::checkDuplicatedNames(const char* Name) {
@@ -104,7 +108,7 @@ size_t CCEXP::checkDuplicatedNames(const char* Name) {
 }
 
 void CCEXP::setStatus(int st) { Status = st; }
-	
+
 
 
 //@#: ############### CCEXP API Functions ###############
@@ -132,7 +136,7 @@ void StoreData(CCEXP &obj, const char* FName) {
 	obj.Status = CCEXPORTMAT_ACTIVE;
 	FILE *fp;
 	__CCEXP_FOPEN__(fp, SelName, "wb");
-	
+
 	if (fp == NULL) {
 		obj.Status = CCEXPORTMAT_READY;
 		CECS_ERR(CCEXPECS,1,"[%s]: StoreData():: Failing opening file for writting...", SelName)
@@ -143,11 +147,11 @@ void StoreData(CCEXP &obj, const char* FName) {
 	for (uint64_t i=0; i < N; i++) {
 		if (! (obj.M[i])->getIgnoreStatus()) { MatricesToSave++; }
 	}
-	
+
 	if (fp != NULL) {
 		uint32_t STBytes = sizeof(uint64_t);
 		fwrite(&STBytes, sizeof(uint32_t), 1, fp); /// Store the size of (uint64_t)
-	
+
 		fwrite(&MatricesToSave,sizeof(uint64_t),1,fp);
 		for (uint64_t i=0; i < N; i++) {
 			if (! (obj.M[i])->getIgnoreStatus()) {
@@ -245,7 +249,7 @@ size_t Rows(CCEXP &obj, const char* matname) {
 	obj.ErrorId = 0;
 	size_t sel = obj.getTableIndexByName(matname);
 	CECS_ERRI(CCEXPECS,sel == MAXSIZE_T, "[%s]: Rows():: Failed to find table with name [%s]!", obj.SavingFile, matname);
-	return Rows(obj, sel); 
+	return Rows(obj, sel);
 }
 
 
@@ -269,7 +273,7 @@ size_t Cols(CCEXP &obj, const char* matname, size_t row) {
 	obj.ErrorId = 0;
 	size_t sel = obj.getTableIndexByName(matname);
 	CECS_ERRI(CCEXPECS,sel == MAXSIZE_T,"[%s]: Cols():: Failed to find table with name [%s]!", obj.SavingFile, matname);
-	return Cols(obj, sel, row); 
+	return Cols(obj, sel, row);
 }
 
 
@@ -290,7 +294,7 @@ bool Ignored(CCEXP &obj, const char* matname) {
 	obj.ErrorId = 0;
 	size_t sel = obj.getTableIndexByName(matname);
 	CECS_ERRB(CCEXPECS,sel == MAXSIZE_T,"[%s]: Ignored():: Failed to find table with name [%s]!", obj.SavingFile, matname);
-	return Ignored(obj, sel); 
+	return Ignored(obj, sel);
 }
 
 
@@ -334,7 +338,7 @@ void DeleteRow(CCEXP &obj, const char* matname, size_t row) {
 	obj.ErrorId = 0;
 	size_t sel = obj.getTableIndexByName(matname);
 	CECS_ERR(CCEXPECS,sel == MAXSIZE_T, "[%s]: DeleteRow():: Failed to find table with name [%s]!", obj.SavingFile, matname);
-	DeleteRow(obj, sel, row); 
+	DeleteRow(obj, sel, row);
 }
 
 
@@ -356,7 +360,7 @@ void DeleteLastElement(CCEXP &obj, const char* matname, size_t row) {
 	obj.ErrorId = 0;
 	size_t sel = obj.getTableIndexByName(matname);
 	CECS_ERR(CCEXPECS,sel == MAXSIZE_T, "[%s]: DeleteLastElement():: Failed to find table with name [%s]!", obj.SavingFile, matname);
-	DeleteLastElement(obj, sel, row); 
+	DeleteLastElement(obj, sel, row);
 }
 
 
@@ -398,7 +402,7 @@ void CleanTable(CCEXP &obj, const char* matname) {
 	obj.ErrorId = 0;
 	size_t sel = obj.getTableIndexByName(matname);
 	CECS_ERR(CCEXPECS,sel == MAXSIZE_T, "[%s]: CleanTable():: Failed to find table with name [%s]!", obj.SavingFile, matname);
-	CleanTable(obj, sel); 
+	CleanTable(obj, sel);
 }
 
 
@@ -430,15 +434,15 @@ void Open(CCEXP &obj, const char* filename) {
 	CECS_ERR(CCEXPECS,filename == NULL,"[%s]: Load():: Loading Filename is NULL!", obj.SavingFile);
 	CECS_ERR(CCEXPECS,(obj.Status != CCEXPORTMAT_INIT) && (obj.Status != CCEXPORTMAT_READY), "[%s]: Open():: CCEXP object has wrong status!", obj.SavingFile);
 	if ((obj.SavingFile[0] == 0) && (obj.SavingFile[1] == 0)) Initialize(obj, filename);
-	
+
 	obj.Status = CCEXPORTMAT_ACTIVE;
 		if (obj.lfp != NULL) fclose(obj.lfp);
-		
+
 		// Open the file but do not close it. CCEXP::Close() is for this job.
 		// obj.lfp = fopen(filename,"rb");
 		__CCEXP_FOPEN__(obj.lfp, filename, "rb");
 		FILE* lfp = obj.lfp;
-		CECS_ERR(CCEXPECS,lfp == NULL,"[%s]: Open():: Failed to open for reading data." , filename );		
+		CECS_ERR(CCEXPECS,lfp == NULL,"[%s]: Open():: Failed to open for reading data." , filename );
 
 		uint32_t LoadSTBytes;
 		fread(&LoadSTBytes, sizeof(uint32_t), 1, lfp);

@@ -1,6 +1,6 @@
 // MIT License
 
-// Copyright (c) 2016 - 2020 Vasileios Kon. Pothos (terablade2001)
+// Copyright (c) 2016 - 2021 Vasileios Kon. Pothos (terablade2001)
 // https://github.com/terablade2001/CCEXP
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,9 +24,10 @@
 #ifndef __CCEXP_HPP__
 #define __CCEXP_HPP__
 
-#define CCEXP_VERSION (0.106)
+#define CCEXP_VERSION (0.107)
 
 #define __CCEXP__USE_MVECTOR
+#define __CCEXP__USE_VECTOR_INSTEAD_OF_LIST
 
 // Include C/C++ Libraries
 #include <stdlib.h>
@@ -148,7 +149,11 @@ class CCEXPMat : public CCEXPBase {
 		int InitRowByScalar(size_t row, T val, size_t n);
 
 		int getRow(size_t row, MVECTOR<T>* &vres);
+		#ifdef __CCEXP__USE_VECTOR_INSTEAD_OF_LIST
+		int getTablePtr(vector<MVECTOR<T>>* &vres);
+		#else
 		int getTablePtr(list<MVECTOR<T>>* &vres);
+		#endif
 
 		int CompareName(const char* Name);
 		bool getIgnoreStatus(void);
@@ -170,15 +175,20 @@ class CCEXPMat : public CCEXPBase {
 		char type[65];
 		bool IgnoreM;
 		bool newRowFlag;
-		list<MVECTOR<T>> data;
+		#ifdef __CCEXP__USE_VECTOR_INSTEAD_OF_LIST
+		std::vector<MVECTOR<T>> data;
+		#else
+		std::list<MVECTOR<T>> data;
+		#endif
 		size_t _maxRows;
 		CCEXP* __parent;
+		MVECTOR<T>* getDataRowPtr(size_t row);
 };
 
 //@#| ############### CCEXP : This is the Global Class ###############
 class CCEXP {
 	public:
-  
+
 	FILE* fp;
 	int Status;
 	int STCounter;
@@ -188,7 +198,7 @@ class CCEXP {
 	FILE* lfp;
 	size_t LoadTotalTables;
 	size_t LoadTableIndex;
-	
+
 	MVECTOR<shared_ptr<CCEXPBase>> M;
 	char SavingFile[257];
 
@@ -196,10 +206,10 @@ class CCEXP {
 	CCEXP(void* pCECS);
 	CCEXP(const char* fname, void* pCECS = nullptr);
 	~CCEXP();
-	
+
 	size_t getTableIndexByName(const char* Name);
 	size_t checkDuplicatedNames(const char* Name);
-	
+
 	void setStatus(int st);
 };
 
@@ -218,6 +228,19 @@ class CCEXP {
 template<class T> CCEXPMat<T>::CCEXPMat() : IgnoreM(false), newRowFlag(true), _maxRows(std::numeric_limits<size_t>::max()) { }
 template<class T> CCEXPMat<T>::~CCEXPMat() { }
 
+template<class T> MVECTOR<T>* CCEXPMat<T>::getDataRowPtr(size_t row) {
+	const size_t N = data.size();
+	CECS_ERRN(CCEXPECS,row >= N,"CCEXPMat::getDataRowPtr():: Requested Row is not exist yet! (row(=" __ZU__ ") >= N(=" __ZU__ "))", row, N);
+	MVECTOR<T>* pRow = nullptr;
+	#ifdef __CCEXP__USE_VECTOR_INSTEAD_OF_LIST
+		pRow = &data[row];
+	#else
+		auto it = std::next(data.begin(), row);
+		pRow = &(*it);
+	#endif
+	CECS_ERRN(CCEXPECS, pRow == nullptr, "CCEXPMat::AppendRow():: pRow is nullptr");
+	return pRow;
+}
 
 template<class T> int CCEXPMat<T>::Initialize(const char* Name, const char* typeName, size_t MaxRows, CCEXP* par) {
 	__parent = par; // Keep a pointer to the parent object for error tracking.
@@ -257,9 +280,7 @@ template<class T> int CCEXPMat<T>::AddRow(T* ptr, size_t n) {
 
 template<class T> int CCEXPMat<T>::AppendRow(size_t row, T* ptr, size_t n) {
 	if (IgnoreM) return 0;
-	const size_t N = data.size();
-	CECS_ERRI(CCEXPECS,row >= N, "CCEXPMat::AppendRow():: Requested Row is not exist yet! (row(=" __ZU__ ") >= N(=" __ZU__ "))", row, N);
-	auto it = std::next(data.begin(), row);
+	MVECTOR<T>* it = getDataRowPtr(row); CECS_ERRI(CCEXPECS, it == nullptr, "CCEXPMat::AppendRow():: 'it' is nullptr");
 	const size_t currentData = (*it).size();
 	(*it).resize(currentData + n);
 	T* Dptr = (*it).data();
@@ -269,9 +290,7 @@ template<class T> int CCEXPMat<T>::AppendRow(size_t row, T* ptr, size_t n) {
 
 template<class T> int CCEXPMat<T>::ReplaceRow(size_t row, T* ptr, size_t n) {
 	if (IgnoreM) return 0;
-	const size_t N = data.size();
-	CECS_ERRI(CCEXPECS,row >= N,"CCEXPMat::ReplaceRow():: Requested Row is not exist yet! (row(=" __ZU__ ") >= N(=" __ZU__ "))", row, N);
-	auto it = std::next(data.begin(), row);
+	MVECTOR<T>* it = getDataRowPtr(row); CECS_ERRI(CCEXPECS, it == nullptr, "CCEXPMat::ReplaceRow():: 'it' is nullptr");
 	(*it).resize(n);
 	memcpy((*it).data(), ptr, sizeof(T) * n);
 	return 0;
@@ -279,9 +298,7 @@ template<class T> int CCEXPMat<T>::ReplaceRow(size_t row, T* ptr, size_t n) {
 
 template<class T> int CCEXPMat<T>::SetVal(size_t row, size_t col, T val) {
 	if (IgnoreM) return 0;
-	const size_t N = data.size();
-	CECS_ERRI(CCEXPECS,row >= N,"CCEXPMat::SetVal():: Requested Row is not exist yet! (row(=" __ZU__ ") >= N(=" __ZU__ "))", row, N);
-	auto it = std::next(data.begin(), row);
+	MVECTOR<T>* it = getDataRowPtr(row); CECS_ERRI(CCEXPECS, it == nullptr, "CCEXPMat::SetVal():: 'it' is nullptr");
 	const size_t M = (*it).size();
 	CECS_ERRI(CCEXPECS,col >= M,"CCEXPMat::SetVal():: Requested Column is not exist yet! (col(=" __ZU__ ") >= M(=" __ZU__ "))", col, M);
 	(*it)[col] = val;
@@ -291,9 +308,7 @@ template<class T> int CCEXPMat<T>::SetVal(size_t row, size_t col, T val) {
 template<class T> int CCEXPMat<T>::InitRowByScalar(size_t row, T val, size_t n) {
 	if (IgnoreM) return 0;
 	if (row != MAXSIZE_T) {
-		const size_t N = data.size();
-		CECS_ERRI(CCEXPECS,row >= N,"CCEXPMat::InitRowByScalar():: Requested Row is not exist yet! (row(=" __ZU__ ") >= N(=" __ZU__ "))", row, N);
-		auto it = std::next(data.begin(), row);
+		MVECTOR<T>* it = getDataRowPtr(row); CECS_ERRI(CCEXPECS, it == nullptr, "CCEXPMat::InitRowByScalar():: 'it' is nullptr");
 		__CCEXP_VECTOR_CLEAR(*it);
 		if (n > 0) (*it).resize(n, val);
 	} else {
@@ -305,14 +320,16 @@ template<class T> int CCEXPMat<T>::InitRowByScalar(size_t row, T val, size_t n) 
 }
 
 template<class T> int CCEXPMat<T>::getRow(size_t row, MVECTOR<T>* &vres) {
-	const size_t N = data.size();
-	CECS_ERRI(CCEXPECS,row >= N,"CCEXPMat::getRowPtr():: Requested Row is not exist yet! (row(=" __ZU__ ") >= N(=" __ZU__ "))", row, N);	
-	auto it = std::next(data.begin(), row);
+	MVECTOR<T>* it = getDataRowPtr(row); CECS_ERRI(CCEXPECS, it == nullptr, "CCEXPMat::getRow():: 'it' is nullptr");
 	vres = &(*it);
 	return 0;
 }
 
+#ifdef __CCEXP__USE_VECTOR_INSTEAD_OF_LIST
+template<class T> int CCEXPMat<T>::getTablePtr(vector<MVECTOR<T>>* &vres) {
+#else
 template<class T> int CCEXPMat<T>::getTablePtr(list<MVECTOR<T>>* &vres) {
+#endif
 	vres = &data;
 	return 0;
 }
@@ -356,9 +373,7 @@ template<class T> int CCEXPMat<T>::Rows(size_t &rows) {
 
 template<class T> int CCEXPMat<T>::Cols(size_t row, size_t &cols) {
 	if (IgnoreM) return 0;
-	const size_t N = data.size();
-	CECS_ERRI(CCEXPECS,row >= N,"CCEXPMat::Cols():: Requested Row is not exist yet! (row(=" __ZU__ ") >= N(=" __ZU__ "))", row, N);	
-	auto it = std::next(data.begin(), row);
+	MVECTOR<T>* it = getDataRowPtr(row); CECS_ERRI(CCEXPECS, it == nullptr, "CCEXPMat::Cols():: 'it' is nullptr");
 	cols = (*it).size();
 	return 0;
 }
@@ -373,18 +388,21 @@ template<class T> int CCEXPMat<T>::DeleteLastRow(void) {
 
 template<class T> int CCEXPMat<T>::DeleteRow(size_t row) {
 	if (IgnoreM) return 0;
-	const size_t N = data.size();
-	CECS_ERRI(CCEXPECS,row >= N,"CCEXPMat::DeleteRow():: Requested Row is not exist yet! (row(=" __ZU__ ") >= N(=" __ZU__ "))", row, N);	
-	auto it = std::next(data.begin(), row);
-	data.erase(it);
+	#ifdef __CCEXP__USE_VECTOR_INSTEAD_OF_LIST
+		CECS_ERRI(CCEXPECS, 1, "CCEXPMat::DeleteRow():: DeleteRow() is not supported with '__CCEXP__USE_VECTOR_INSTEAD_OF_LIST' enabled!");
+	#else
+		const size_t N = data.size();
+		CECS_ERRI(CCEXPECS,row >= N,"CCEXPMat::DeleteRow():: Requested Row is not exist yet! (row(=" __ZU__ ") >= N(=" __ZU__ "))", row, N);	
+		auto it = std::next(data.begin(), row);
+		data.erase(it);
+	#endif
 	return 0;
 }
 
+
 template<class T> int CCEXPMat<T>::DeleteLastElement(size_t row) {
 	if (IgnoreM) return 0;
-	const size_t N = data.size();
-	CECS_ERRI(CCEXPECS,row >= N,"CCEXPMat::DeleteLastElement():: Requested Row is not exist yet! (row(=" __ZU__ ") >= N(=" __ZU__ "))", row, N);	
-	auto it = std::next(data.begin(), row);
+	MVECTOR<T>* it = getDataRowPtr(row); CECS_ERRI(CCEXPECS, it == nullptr, "CCEXPMat::DeleteLastElement():: 'it' is nullptr");
 	if ((*it).size() > 0)  (*it).pop_back();
 	return 0;
 }
@@ -396,22 +414,22 @@ template<class T> char* CCEXPMat<T>::getType(void) { return type; }
 template<class T> int CCEXPMat<T>::StoreData(FILE* fp) {
 	if (IgnoreM) return 0;
 	CECS_ERRI(CCEXPECS,fp == NULL,"CCEXPMat::StoreData():: File pointer is NULL! (!%u!)");
-	
+
 	uint64_t N = (uint64_t)data.size();
 	uint64_t typeSize = (uint64_t)sizeof(T);
 	uint64_t _maxRows64 = (uint64_t)_maxRows;
-	
+
 	fwrite(name,sizeof(char),64,fp); /// Table, Name
 	fwrite(type,sizeof(char),64,fp); /// Table, Type (string)
 	fwrite(&typeSize,sizeof(uint64_t),1,fp); /// Table, type size in Bytes
 	fwrite(&N,sizeof(uint64_t),1,fp); /// Table, number of rows
 	fwrite(&_maxRows64,sizeof(uint64_t),1,fp); /// Maximum rows of the table.
 	if (N > _maxRows) N = _maxRows; /// Limit Rows ...
-	
+
 	CECS_ERRO(CCEXPECS,data.size() > N, {fclose(fp); return _CECS_DEFAULT_ERRID;},
 			"CCEXPMat::StoreData():: Table [%s] containing more Rows (=" __ZU__ ") than MaxRows (=" __ZU__ ")",
 			name, data.size(), _maxRows)
-	
+
 	if (N > 0) {
 		MVECTOR<uint64_t> DPL; DPL.resize(N);
 		int i = 0;
@@ -504,7 +522,7 @@ template<class T> inline void AddTableI(
 	CECS_ERR(CCEXPECS,rd > 0,"[%s]: AddTable()::  Table with name [%s] already exist!", obj.SavingFile, matname);
 	obj.M.push_back(shared_ptr<CCEXPBase>((CCEXPBase*) new CCEXPMat<T>));
 	CCEXPMat<T>* U = static_cast<CCEXPMat<T>*>(obj.M[obj.M.size()-1].get());
-	int ret = U->Initialize(matname, typeName, MaxRows, &obj);	
+	int ret = U->Initialize(matname, typeName, MaxRows, &obj);
 	int ret2 = U->setIgnoreStatus(true);
 	CECS_ERR(CCEXPECS,ret != 0,"[%s]: AddTable():: Internal error occured during initialization()", obj.SavingFile);
 	CECS_ERR(CCEXPECS,ret2 != 0,"[%s]: AddTable():: Internal error occured during setIgnoreStatus()", obj.SavingFile);
@@ -549,7 +567,7 @@ template<class T> inline void LoadTable(CCEXP &obj, const char* name, const char
 	if (!TableFound) {
 		// If the Table has not been found in the file, search again from the start
 		fseek(lfp, sizeof(uint32_t) + sizeof(uint64_t), SEEK_SET);
-		
+
 		for (uint64_t i = 0; i < obj.LoadTableIndex; i++) {
 			LastTablePosByte = ftell(lfp);
 			fread(loadName,sizeof(char),64,lfp);
@@ -569,13 +587,13 @@ template<class T> inline void LoadTable(CCEXP &obj, const char* name, const char
 			fseek(lfp, (long)TableBytes, SEEK_CUR);
 		}
 	}
-	
+
 	// If the Table hot not been found, then abort with error.
 	if(!TableFound) {
 		fseek(lfp, (long)LastTablePosByte, SEEK_SET);
 		CECS_ERR(CCEXPECS,1, "[%s]: LoadTable():: Failed to find table [%s] into the last opened file!", obj.SavingFile, name);
 	}
-	
+
 	// At this point the table has been found, and we have to reload it!
 	if (strcmp(loadType, type) != 0) {
 		fseek(lfp, (long)LastTablePosByte, SEEK_SET);
@@ -611,7 +629,7 @@ template<class T> inline void LoadTable(CCEXP &obj, const char* name, const char
 	// Warning: newRowFlag should be set to false, thus use to be able
 	// add data directly to the end of the last row if he want.
 	U->NoNewRow();
-	
+
 	if (obj.LoadTableIndex >= obj.LoadTotalTables) {
 		obj.LoadTableIndex = 0;
 		fseek(lfp, sizeof(uint32_t) + sizeof(uint64_t), SEEK_SET);
