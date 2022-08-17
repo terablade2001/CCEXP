@@ -99,10 +99,12 @@ size_t CCEXP::getTableIndexByName(const char* Name) {
 		if ((M[i])->CompareName(Name) == 0) { sel=i; break; }
 	return sel;
 }
+#define f(i,a,b) for(size_t i=a; i<b; i++)
 
 size_t CCEXP::checkDuplicatedNames(const char* Name) {
 	size_t cnt = 0;
-	for (size_t i = 0; i < M.size(); i++)
+	f(i,0,M.size())
+// 	for (size_t i = 0; i < M.size(); i++)
 		if ((M[i])->CompareName(Name) == 0) { cnt++; }
 	return cnt; // return how many times a Table name was found in the list.
 }
