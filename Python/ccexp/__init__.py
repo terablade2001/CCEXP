@@ -1,7 +1,7 @@
 #! /user/bin/env python
 # MIT License
 
-# Copyright (c) 2016 - 2020 Vasileios Kon. Pothos (terablade2001)
+# Copyright (c) 2016 - 2023 Vasileios Kon. Pothos (terablade2001)
 # https://github.com/terablade2001/CCEXP
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,7 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# Version 0.106
+# Version 0.108
 
 import sys
 import struct
@@ -58,6 +58,23 @@ class CCEXP:
       cnt = self.obj[tableName]["cnt"]
       self.obj[tableName]["data"][cnt] = rowdata
       self.obj[tableName]["cnt"] += 1
+    return
+
+  def AddVal(self, tableName, row, val):
+    p = [p for p in self.obj.keys() if p == tableName]
+    if not p:
+      S = "Table [%s] does not exist!"%(tableName)
+      raise Exception(S)
+    else:
+      cnt = self.obj[tableName]["cnt"]
+      if (cnt == 0):
+        self.obj[tableName]["cnt"] += 1
+        self.obj[tableName]["data"][cnt] = []
+        cnt = 1
+      if (row >= cnt):
+        S = "Table [%s] have %i rows. Row-ID %i is not valid!"%(tableName,cnt,row)
+        raise Exception(S)
+      self.obj[tableName]["data"][row].append(val)
     return
 
   def StoreData(self, filename):
