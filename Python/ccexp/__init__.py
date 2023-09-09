@@ -22,7 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# Version 0.108
+# Version 0.109
 
 import sys
 import struct
@@ -116,7 +116,11 @@ class CCEXP:
             fout.write(arr)
           else:
             for v in arr:
-              fout.write(struct.pack(PackType, v))
+              try:
+                fout.write(struct.pack(PackType, v))
+              except Exception:
+                print("PackType:", PackType, "value:", v, "type of value:", type(v))
+                raise Exception("error")
 
 
 
